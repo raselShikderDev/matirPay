@@ -1,6 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
-import { IUser, ROLE } from "./user.interfaces";
+import { IAuthProvider, IUser, ROLE } from "./user.interfaces";
 import { userModel } from "./user.model";
 import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
@@ -12,22 +12,29 @@ const createUser = async (payload: Partial<IUser>) => {
     throw new myAppError(StatusCodes.CONFLICT, "Email already exists");
   }
 
-  console.log(
-    payload.password as string,
-    Number(envVarriables.BCRYPT_SALT_ROUND as string)
-  );
-
   payload.password = await bcrypt.hash(
     payload.password as string,
     Number(envVarriables.BCRYPT_SALT_ROUND as string)
   );
+  
+  
+
+  payload.auths = [
+    {
+      provider: "Credentials",
+      providerId: payload.email as string,
+    },
+  ];
 
   const newUser = await userModel.create(payload);
+
+  const userObj = newUser.toObject();
+  const { password, ...userWithoutPassword } = userObj;
 
   if (!newUser) {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to create user");
   }
-  return newUser;
+  return userWithoutPassword;
 };
 
 // Updating user
@@ -41,7 +48,7 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
     }
   }
 
-  const existedUser = await userModel.findById(userId);
+  const existedUser = await userModel.findById(userId).select("-password");
   if (!existedUser) {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "You are not allowed");
   }
