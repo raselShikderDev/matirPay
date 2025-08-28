@@ -1,22 +1,22 @@
 import { NextFunction, Request, Response } from "express";
 import asyncFunc from "../../utils/asyncFunc";
 
-const createUser = asyncFunc(
+const createWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {}
 );
-const updateUser = asyncFunc(
+const updateWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {}
 );
-const allUser = asyncFunc(
+const allWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {}
 );
-const singelUser = asyncFunc(
+const singelWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {}
 );
 
-export const userController = {
-  createUser,
-  updateUser,
-  allUser,
-  singelUser
+export const walletController = {
+  createWallet,
+  updateWallet,
+  allWallet,
+  singelWallet,
 };
