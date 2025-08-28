@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import app from "./app";
 import { envVarriables } from "./app/configs/envVars.config";
+import seedSuperAdmin from "./app/utils/seedSuperAdmin";
 
 const PORT = envVarriables.PORT as string;
 
@@ -30,6 +31,7 @@ const startServer = async () => {
   }
 };
 
-
-
- startServer();
+(async function () {
+  await startServer();
+  await seedSuperAdmin();
+})();

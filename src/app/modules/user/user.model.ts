@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema<IUser>(
     role: {
       type: String,
       enum: Object.values(ROLE),
-      default: ROLE.USER,
+      required: true,
     },
     phone: String,
     picture: String,

@@ -1,37 +1,29 @@
-import tsParser from '@typescript-eslint/parser';
+import js from '@eslint/js';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
-import prettierPlugin from 'eslint-plugin-prettier';
+import tsParser from '@typescript-eslint/parser';
+import globals from 'globals';
 
 export default [
+  js.configs.recommended,
   {
-    ignores: ['node_modules', 'dist'],
-  },
-  {
-    files: ['*.ts', '*.js'],
+    files: ['**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
+        project: './tsconfig.json',
         ecmaVersion: 'latest',
         sourceType: 'module',
       },
+      globals: { ...globals.node },
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
-      prettier: prettierPlugin,
     },
+    extends: ['plugin:@typescript-eslint/recommended'],
     rules: {
+      'no-console': 'warn', 
       '@typescript-eslint/no-unused-vars': 'error',
-      'no-unused-vars': 'off',
-      'no-console': 'warn',
-      quotes: ['error', 'double'], // 
-      'prettier/prettier': [
-        'error',
-        {
-          singleQuote: false, 
-          semi: true,
-          trailingComma: 'all',
-        },
-      ],
+      'no-unused-vars': 'off', 
     },
   },
 ];
