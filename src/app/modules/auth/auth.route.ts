@@ -7,7 +7,8 @@ const router = Router()
 
 
 router.post("/sign-in", validateRequest(signInZodSchema), authController.credentialsLogin)
-router.post("/sign-up", authController.credentialsRegister)
+router.post("/log-out", authController.loggedOut)
+router.post("/new-access-token", authController.generateNewTokens)
 
 
 export const authRouter = router

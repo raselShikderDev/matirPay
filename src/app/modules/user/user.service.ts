@@ -1,16 +1,13 @@
 import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
-import { IAuthProvider, IUser, ROLE } from "./user.interfaces";
+import { IAuthProvider, IUser, ROLE, USER_STATUS } from "./user.interfaces";
 import { userModel } from "./user.model";
 import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
 import { walletModel } from "../wallet/wallet.model";
 
-
-
 // Creatung user with wa llet
 const createUser = async (payload: Partial<IUser>) => {
-
   const session = await walletModel.startSession();
   await session.startTransaction();
 
@@ -82,10 +79,8 @@ const createUser = async (payload: Partial<IUser>) => {
   }
 };
 
-
 // Updating user
 const updateUser = async (payload: Partial<IUser>, userId: string) => {
-
   if (payload.role) {
     // user and agent are not allowed to chnage their own role
     if (payload.role === ROLE.AGENT || payload.role === ROLE.USER) {
@@ -122,31 +117,142 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
   return updatedUser;
 };
 
-
 // Retriving all User - only admins are allowed
-const allUser = async () => {
-  const getAllUser = await userModel.find()
+const allUser = async (query: Record<string, string>) => {
+  const role = query.filter || "";
+  const limit = Number(query.limit) || 10;
+  const page = Number(query.page) || 1;
+  const skip = (page - 1) * limit;
 
-
-  if (!getAllUser ||getAllUser === null) {
-    throw new myAppError(StatusCodes.NOT_FOUND ,"User not created yet or no user found")
+  const filter: Record<string, unknown> = {};
+  if (role) {
+    filter.role = role;
   }
 
-  const totalUser = await userModel.countDocuments()
+  const users = await userModel
+    .find(filter)
+    .skip(skip)
+    .limit(limit)
+    .select("-password");
+
+  if (!users || users === null) {
+    throw new myAppError(
+      StatusCodes.NOT_FOUND,
+      "User not created yet or no user found",
+    );
+  }
+
+  const totalUser = await userModel.countDocuments();
 
   return {
-    data:getAllUser,
-    meta:totalUser,
-  }
-
+    data: users,
+    meta: {
+      totalUser,
+      limit,
+      page,
+    },
+  };
 };
 
-const singelUser = async (userId:string) => {
-  const user = await userModel.findById(userId)
+// Rertriving singel user
+const singelUser = async (userId: string) => {
+  const user = await userModel.findById(userId).select("-password");
   if (!user) {
-    throw new myAppError(StatusCodes.NOT_FOUND ,"User not found")
+    throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
   }
-return user
+  return user;
+};
+
+// Chnaging password after forgeting
+const changePassowrd = async (email: string, plainPassword: string) => {
+  const existedUser = await userModel.findOne({ email });
+  if (!existedUser) {
+    throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  if (
+    existedUser.status === USER_STATUS.BLOCKED ||
+    existedUser.status === USER_STATUS.SUSPENDED
+  ) {
+    throw new myAppError(
+      StatusCodes.UNAUTHORIZED,
+      `User is ${existedUser.status}`,
+    );
+  }
+  // if user already deleted
+  if (existedUser.isDeleted === true) {
+    throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
+  }
+
+  const hasedpassword = await bcrypt.hash(
+    plainPassword as string,
+    Number(envVarriables.BCRYPT_SALT_ROUND as string),
+  );
+  const updatedpassword = await userModel.findByIdAndUpdate(
+    existedUser._id,
+    { password: hasedpassword },
+    { runValidators: true, new: true },
+  );
+
+  if (!updatedpassword) {
+    throw new myAppError(
+      StatusCodes.BAD_GATEWAY,
+      "Changing password is failed",
+    );
+  }
+  return true;
+};
+
+// Updating password while logedIn
+const updatePassowrd = async (
+  oldPassword: string,
+  newPassword: string,
+  email: string,
+) => {
+  const existedUser = await userModel.findOne({ email });
+  if (!existedUser) {
+    throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
+  }
+
+  if (
+    existedUser.status === USER_STATUS.BLOCKED ||
+    existedUser.status === USER_STATUS.SUSPENDED
+  ) {
+    throw new myAppError(
+      StatusCodes.UNAUTHORIZED,
+      `User is ${existedUser.status}`,
+    );
+  }
+  // if user already deleted
+  if (existedUser.isDeleted === true) {
+    throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
+  }
+
+  const isValidPassword = await bcrypt.compare(
+    oldPassword,
+    existedUser.password,
+  );
+  if (!isValidPassword) {
+    throw new myAppError(StatusCodes.NOT_FOUND, "Invalid Password");
+  }
+
+  const hasedpassword = await bcrypt.hash(
+    newPassword as string,
+    Number(envVarriables.BCRYPT_SALT_ROUND as string),
+  );
+  const updatedpassword = await userModel.findByIdAndUpdate(
+    existedUser._id,
+    { password: hasedpassword },
+    { runValidators: true, new: true },
+  );
+
+  if (!updatedpassword) {
+    throw new myAppError(
+      StatusCodes.BAD_GATEWAY,
+      "updating password is failed",
+    );
+  }
+  return true;
 };
 
 export const userServices = {
@@ -154,4 +260,6 @@ export const userServices = {
   updateUser,
   allUser,
   singelUser,
+  changePassowrd,
+  updatePassowrd,
 };

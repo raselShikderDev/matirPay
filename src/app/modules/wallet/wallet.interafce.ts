@@ -22,3 +22,7 @@ export interface IWallet {
     limit?:number,
     transactions?:Types.ObjectId[];
 }
+
+export interface IBalanceAvailablity extends Model<IWallet>{
+    balanceAvailablity(requestedAmount: number, senderWalletId: Types.ObjectId, session:mongoose.ClientSession):Promise<IWallet> | null
+}

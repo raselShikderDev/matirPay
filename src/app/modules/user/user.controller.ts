@@ -7,6 +7,7 @@ import { StatusCodes } from "http-status-codes";
 import z from "zod";
 import { Types } from "mongoose";
 import myAppError from "../../errorHelper";
+import { JwtPayload } from "jsonwebtoken";
 
 
 // Creatung user
@@ -46,19 +47,24 @@ const updateUser = asyncFunc(
 // Retriving all User - only admins are allowed
 const allUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-
     const query = req.query
-
-    const getAllUser = await userServices.allUser()
-
+    const {data, meta} = await userServices.allUser(query as Record<string, string>)
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.CREATED,
       message: "Successfully retrived users",
-      data: getAllUser,
+      data,
+      meta:{
+        total:meta.totalUser,
+        totalpage:meta.page,
+        limit:meta.limit
+      }
     });
   }
 );
+
+
+// Retriving singel User - only admins are allowed
 const singelUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const {userId} = req.params
@@ -76,9 +82,68 @@ const singelUser = asyncFunc(
   }
 );
 
+
+// Retriving curent User info
+const getMe = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JwtPayload
+   
+    const user = await userServices.singelUser(decodedToken.userId)
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.CREATED,
+      message: "Successfully current user",
+      data: user,
+    });
+  }
+);
+
+
+// Chnaging password after forgeting
+const changePassowrd = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const {email, newPassowrd} = req.body
+   
+    const passwordChnaged = await userServices.changePassowrd(email, newPassowrd)
+if (!passwordChnaged) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
+  }
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.CREATED,
+      message: "Successfully password chnaged",
+      data: null,
+    });
+  }
+);
+
+
+// Updating password while logedIn
+const updatePassowrd = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JwtPayload
+    const {oldPassword, newPassowrd} = req.body
+   
+    const user = await userServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.CREATED,
+      message: "Successfully current user",
+      data: user,
+    });
+  }
+);
+
+
+
 export const userController = {
   createUser,
   updateUser,
   allUser,
   singelUser,
+  getMe,
+  changePassowrd,
+  updatePassowrd,
 };

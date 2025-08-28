@@ -1,9 +1,12 @@
 import mongoose, { Schema } from "mongoose";
-import { ITransaction, TransactionInitiatedBy, TransactionType } from "./transactions.interface";
-
+import {
+  ITransaction,
+  TransactionInitiatedBy,
+  TransactionType,
+} from "./transactions.interface";
 
 const transactionSchema = new mongoose.Schema(
-    {
+  {
     user: {
       type: Schema.Types.ObjectId,
       ref: "user",
@@ -16,12 +19,12 @@ const transactionSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: Object.values(TransactionType),
-      required:true,
+      required: true,
     },
-    initiatedBy:{
-    type: String,
+    initiatedBy: {
+      type: String,
       enum: Object.values(TransactionInitiatedBy),
-      required:true,
+      required: true,
     },
     fromWallet: {
       type: Schema.Types.ObjectId,
@@ -37,7 +40,10 @@ const transactionSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
-)
+  },
+);
 
-export const transactionModel = mongoose.model<ITransaction>("transaction", transactionSchema)
+export const transactionModel = mongoose.model<ITransaction>(
+  "transaction",
+  transactionSchema,
+);
