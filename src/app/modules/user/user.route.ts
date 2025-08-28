@@ -11,7 +11,9 @@ router.post("/create-user", validateRequest(createUserZodSchema), userController
 // Retriving all user
 router.get("/",  userController.allUser)
 //Updating user
-router.get("/update-user", validateRequest(updateUserZodSchema), userController.allUser)
+router.get("/update-user", validateRequest(updateUserZodSchema), userController.updateUser)
+router.get("/all-user", validateRequest(updateUserZodSchema), userController.allUser)
+router.get("/:userId", validateRequest(updateUserZodSchema), userController.singelUser)
 
 
 export const userRouter = router

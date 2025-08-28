@@ -6,6 +6,8 @@ import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
 import { walletModel } from "../wallet/wallet.model";
 
+
+
 // Creatung user with wa llet
 const createUser = async (payload: Partial<IUser>) => {
 
@@ -80,6 +82,7 @@ const createUser = async (payload: Partial<IUser>) => {
   }
 };
 
+
 // Updating user
 const updateUser = async (payload: Partial<IUser>, userId: string) => {
 
@@ -119,9 +122,32 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
   return updatedUser;
 };
 
-const allUser = async () => {};
 
-const singelUser = async () => {};
+// Retriving all User - only admins are allowed
+const allUser = async () => {
+  const getAllUser = await userModel.find()
+
+
+  if (!getAllUser ||getAllUser === null) {
+    throw new myAppError(StatusCodes.NOT_FOUND ,"User not created yet or no user found")
+  }
+
+  const totalUser = await userModel.countDocuments()
+
+  return {
+    data:getAllUser,
+    meta:totalUser,
+  }
+
+};
+
+const singelUser = async (userId:string) => {
+  const user = await userModel.findById(userId)
+  if (!user) {
+    throw new myAppError(StatusCodes.NOT_FOUND ,"User not found")
+  }
+return user
+};
 
 export const userServices = {
   createUser,
