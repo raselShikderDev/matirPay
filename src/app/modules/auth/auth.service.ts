@@ -11,14 +11,14 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
     throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
-  // if user blocked or suspened 
+  // if user blocked or suspened
   if (
     existedUser.status === USER_STATUS.BLOCKED ||
     existedUser.status === USER_STATUS.SUSPENDED
   ) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
-      `User is ${existedUser.status}`
+      `User is ${existedUser.status}`,
     );
   }
   // if user already deleted
@@ -26,9 +26,13 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
     throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
   }
 
+  // if (existedUser.isVerified === false) {
+  //   throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+  // }
+
   const isValidPassword = await bcrypt.compare(
     plainPassword,
-    existedUser.password
+    existedUser.password,
   );
   if (!isValidPassword) {
     throw new myAppError(StatusCodes.NOT_FOUND, "Invalid Password");
