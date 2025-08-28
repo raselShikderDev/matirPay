@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import app from "./app";
-import { envVarriables } from "./configs/envVars.config";
+import { envVarriables } from "./app/configs/envVars.config";
 
 const PORT = envVarriables.PORT as string;
 

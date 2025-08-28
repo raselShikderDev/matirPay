@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { IWallet, WALLET_CURRENCY, WALLET_STATUS } from "../wallet/wallet.interafce";
+import { IWallet, WALLET_CURRENCY, WALLET_STATUS } from "./wallet.interafce";
 
 const walletSchema = new mongoose.Schema<IWallet>(
   {
@@ -42,4 +42,4 @@ const walletSchema = new mongoose.Schema<IWallet>(
   }
 );
 
-export const walletModel = mongoose.model<IWallet>("wallet", walletSchema)
+export const walletModel = mongoose.model<IWallet>("wallet", walletSchema);
