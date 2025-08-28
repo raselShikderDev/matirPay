@@ -6,7 +6,9 @@
     "lint": "eslint . --ext .ts"
   },
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.9",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
