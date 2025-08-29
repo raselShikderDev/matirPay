@@ -81,7 +81,7 @@ const userSendMOney = async (
   const session = await transactionModel.startSession();
   session.startTransaction();
   try {
-    const { amount, type, toWallet } = payload;
+    const { amount, toWallet } = payload;
 
     // Sender wallet user
     const fromWalletUser = await userModel
@@ -90,7 +90,7 @@ const userSendMOney = async (
     if (!fromWalletUser) {
       throw new myAppError(
         StatusCodes.BAD_REQUEST,
-        `You are not allowed to make ${type}`,
+        `You are not allowed to make ${TransactionType.SEND_MONEY}`,
       );
     }
 
@@ -148,7 +148,7 @@ const userSendMOney = async (
     if (!senderWallet) {
       throw new myAppError(
         StatusCodes.NOT_FOUND,
-        `You are not allowed to make ${type}`,
+        `You are not allowed to make ${TransactionType.SEND_MONEY}`,
       );
     }
 
@@ -186,7 +186,7 @@ const userSendMOney = async (
     const senderPayload: ITransaction = {
       user: decodedToken.id,
       amount,
-      type: type,
+      type: TransactionType.SEND_MONEY,
       initiatedBy: decodedToken.role,
       fromWallet: updatedSenderWallet._id!,
       toWallet: updateReceiverWallet._id!,

@@ -1,6 +1,6 @@
 import { Query } from "mongoose";
 
-const excludeFeild = ["auths", "address"];
+
 const includeFeild = ["type", "fromWallet", "initiatedBy"];
 
 export class QueryBuilder<T> {
@@ -14,12 +14,15 @@ export class QueryBuilder<T> {
 
   filter(): this {
     const queries = { ...this.query };
+    console.log("In qury builder - queries: ", queries);
+
     const filter: Record<string, string> = {};
     for (const feild of includeFeild) {
       if (feild in queries) {
         filter[feild] = queries[feild];
       }
     }
+console.log("In qury builder - filter: ", filter);
 
     this.modelQuery = this.modelQuery.find(filter);
 

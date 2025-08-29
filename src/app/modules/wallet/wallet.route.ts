@@ -45,7 +45,7 @@ router.patch(
 // get wallet by id - only for admins and super admins
 router.get(
   "/:id",
-  checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN),
+  checkAuth(...Object.values(ROLE)),
   walletController.singelWallet
 );
 

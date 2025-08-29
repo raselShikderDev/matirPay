@@ -11,9 +11,9 @@ router.get("/", checkAuth(...Object.values(ROLE)), transactionController.viewTra
 // View all transactin occoured till now - only for admin and super admin
 router.get("/all", checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN), transactionController.allTransaction)
 // View all transactin of an user - only for admin and super admin
+// router.get("/my-transactions", checkAuth(...Object.values(ROLE)), transactionController.myTransaction)
 router.get("/:id", checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN), transactionController.singelUserTransaction)
 
 
-export const transactionRoute = router
 
 export const transactionsRouter = router

@@ -6,7 +6,7 @@ import mongoose from "mongoose";
 import asyncFunc from "../../utils/asyncFunc";
 import { walletServices } from "./wallet.service";
 import myAppError from "../../errorHelper";
-import { JwtPayload } from "jsonwebtoken";
+
 
 // Get all wallet - Only admin and super admins are allowed
 const allWallet = asyncFunc(
