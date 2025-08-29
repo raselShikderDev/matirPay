@@ -187,13 +187,11 @@ const resetPassowrd = async (email: string, plainPassword: string) => {
   return true;
 };
 
-const sendVerifyOtp = async ()=>{
 
-}
 
 export const authServices = {
   credentialsLogin,
   generateNewTokens,
   updatePassowrd,
-  resetPassowrd,
+  resetPassowrd
 };

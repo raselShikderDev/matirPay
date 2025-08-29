@@ -3,6 +3,7 @@ import { userRouter } from "../modules/user/user.route";
 import { authRouter } from "../modules/auth/auth.route";
 import { walletRouter } from "../modules/wallet/wallet.route";
 import { transactionsRouter } from "../modules/transactions/transactions.route";
+import { OtpRoutes } from "../modules/otp/otp.route";
 
 const mainRouter = Router();
 
@@ -22,6 +23,10 @@ const moduleRoute = [
   {
     path: "/transactions",
     router: transactionsRouter,
+  },
+  {
+    path: "/otp",
+    router: OtpRoutes,
   },
 ];
 

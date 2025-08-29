@@ -1,11 +1,23 @@
 import path from "path";
 import { envVarriables } from "../configs/envVars.config";
-import { transporter } from "../configs/nodeMailer";
 import myAppError from "../errorHelper";
 import { StatusCodes } from "http-status-codes";
 import ejs from "ejs";
+import nodemailer from "nodemailer"
 
-interface sendEmailOptions {
+
+// Create a test account or replace with real credentials.
+export const transporter = nodemailer.createTransport({
+  host: envVarriables.SMTP_HOST,
+  port:Number(envVarriables.SMTP_PORT as string),
+  secure: true,
+  auth: {
+    user: envVarriables.SMTP_USER as string,
+    pass: envVarriables.SMTP_PASS,
+  },
+});
+
+export interface sendEmailOptions {
   to: string;
   subject: string;
   templateName: string;
@@ -21,12 +33,12 @@ export const sendMail = async ({
   to,
   subject,
   templateName,
-  attachments,
   templateData,
+  attachments,
 }: sendEmailOptions) => {
   try {
     const filepath = path.join(__dirname, `templates/${templateName}.ejs`);
-    const html = await ejs.render(filepath, templateData);
+    const html = await ejs.renderFile(filepath, templateData);
 
     const info = await transporter.sendMail({
       from: envVarriables.SMTP_FROM as string,
