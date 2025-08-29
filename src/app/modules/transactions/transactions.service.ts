@@ -68,7 +68,6 @@ const allTransaction = async () => {
 };
 
 
-
 // View all transactin of a singel user - only admin and super admin aare allowed
 const singelUserTransaction = async (email: string, query:Record<string, string>) => {
   const user = await userModel

@@ -2,10 +2,11 @@ import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
 import { userModel } from "../user/user.model";
 import bcrypt from "bcrypt";
-import { IUser, USER_STATUS } from "../user/user.interfaces";
+import { USER_STATUS } from "../user/user.interfaces";
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import { envVarriables } from "../../configs/envVars.config";
 import generateTokens from "../../utils/generateTokens";
+
 
 // Login by Credentials
 const credentialsLogin = async (email: string, plainPassword: string) => {
@@ -185,6 +186,10 @@ const resetPassowrd = async (email: string, plainPassword: string) => {
   }
   return true;
 };
+
+const sendVerifyOtp = async ()=>{
+
+}
 
 export const authServices = {
   credentialsLogin,
