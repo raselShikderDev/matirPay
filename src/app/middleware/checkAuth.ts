@@ -29,8 +29,11 @@ const checkAuth =
         throw new myAppError(StatusCodes.UNAUTHORIZED, "Invalid access token");
       }
 
+      console.log("verifiedToken: ", verifiedToken);
+      
+
       const existedUser = await userModel
-        .findById(verifiedToken.userId)
+        .findById(verifiedToken.id)
         .select("-password");
       if (!existedUser) {
         throw new myAppError(StatusCodes.NOT_FOUND, "User not found");

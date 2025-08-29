@@ -77,11 +77,9 @@ const seedSuperAdmin = async () => {
         "Updating Wallet id in Super admin is failed",
       );
     }
-
-    await session.commitTransaction();
-    if (envVarriables.NODE_ENV === "Development")
+ if (envVarriables.NODE_ENV === "Development")
       console.log("Super Admin created successfully");
-    return;
+    await session.commitTransaction();
   } catch (error: any) {
     await session.abortTransaction();
     if (envVarriables.NODE_ENV === "Development") {

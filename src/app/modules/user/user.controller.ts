@@ -5,7 +5,7 @@ import { userServices } from "./user.service";
 import sendResponse from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import z from "zod";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import myAppError from "../../errorHelper";
 import { JwtPayload } from "jsonwebtoken";
 
@@ -48,6 +48,8 @@ const updateUser = asyncFunc(
 const allUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const query = req.query
+    console.log("req.query: ", req.query);
+    
     const {data, meta} = await userServices.allUser(query as Record<string, string>)
     sendResponse(res, {
       success: true,
@@ -100,41 +102,89 @@ const getMe = asyncFunc(
 );
 
 
-// Chnaging password after forgeting
-const changePassowrd = asyncFunc(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const {email, newPassowrd} = req.body
-   
-    const passwordChnaged = await userServices.changePassowrd(email, newPassowrd)
-if (!passwordChnaged) {
-    throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
+// Deleteing user by id
+const deleteUser = asyncFunc(async(req:Request, res:Response, next:NextFunction)=>{
+    const id = req.params.id
+    if (!mongoose.isValidObjectId(id)) {
+        throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid")
+    }
+    await userServices.deleteUser(id)
+    sendResponse(res, {
+    statusCode:StatusCodes.OK,
+    success:true,
+    message:"Successfully deleted user",
+    data:null,
+    })
+})
+
+
+// Retriving all Agents
+const allAgents = asyncFunc(async(req:Request, res:Response, next:NextFunction)=>{    
+    const data = await userServices.allAgents()
+    
+    sendResponse(res, {
+    statusCode:StatusCodes.OK,
+    success:true,
+    message:"Successfully retrived all agents",
+    data:data.data,
+    meta:{
+        total:data.meta
+    },
+    })
+})
+
+// Retriving an singel Agent by id
+const getSingelAgent = asyncFunc(async(req:Request, res:Response, next:NextFunction)=>{ 
+    const id = req.params.id   
+    const data = await userServices.getSingelAgent(id)
+    sendResponse(res, {
+    statusCode:StatusCodes.OK,
+    success:true,
+    message:"Successfully retrived agent",
+    data:data,
+    })
+})
+
+
+// Updating user role to agent by id - only allowed for admins
+const agentApproval = asyncFunc(async(req:Request, res:Response, next:NextFunction)=>{
+    const id = req.params.id
+    if (!mongoose.isValidObjectId(id)) {
+        throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid")
+    }
+    const data = await userServices.agentApproval(id)
+    
+    if (data.updatedToAgent || data.updatedToAgent === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Failed to update user to agent"
+    );
   }
     sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.CREATED,
-      message: "Successfully password chnaged",
-      data: null,
-    });
-  }
-);
+    statusCode:StatusCodes.OK,
+    success:true,
+    message:data.message,
+    data:data.alreadyApproved,
+    })
+})
 
 
-// Updating password while logedIn
-const updatePassowrd = asyncFunc(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const decodedToken = req.user as JwtPayload
-    const {oldPassword, newPassowrd} = req.body
-   
-    const user = await userServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+// update agent status in a toggle system by id - only admins are allowed
+const agentStatusToggle = asyncFunc(async(req:Request, res:Response, next:NextFunction)=>{
 
+    const id = req.params.id
+    if (!mongoose.isValidObjectId(id)) {
+        throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid")
+    }
+    const data = await userServices.agentStatusToggle(id)
+    
     sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.CREATED,
-      message: "Successfully current user",
-      data: user,
-    });
-  }
-);
+    statusCode:StatusCodes.OK,
+    success:true,
+    message:`Agent successfully ${data.isAgentApproved ? "Approved" : "Suspended"}`,
+    data:data,
+    })
+})
 
 
 
@@ -144,6 +194,9 @@ export const userController = {
   allUser,
   singelUser,
   getMe,
-  changePassowrd,
-  updatePassowrd,
+  deleteUser,
+  allAgents,
+  getSingelAgent,
+  agentApproval,
+  agentStatusToggle,
 };

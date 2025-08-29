@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
 import { walletModel } from "../wallet/wallet.model";
 
+
 // Creatung user with wa llet
 const createUser = async (payload: Partial<IUser>) => {
   const session = await walletModel.startSession();
@@ -98,12 +99,6 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "You are not permitted");
   }
 
-  if (payload.password) {
-    existedUser.password = await bcrypt.hash(
-      payload.password as string,
-      Number(envVarriables.BCRYPT_SALT_ROUND),
-    );
-  }
 
   const updatedUser = await userModel.findByIdAndUpdate(
     existedUser._id,
@@ -163,96 +158,134 @@ const singelUser = async (userId: string) => {
   return user;
 };
 
-// Chnaging password after forgeting
-const changePassowrd = async (email: string, plainPassword: string) => {
-  const existedUser = await userModel.findOne({ email });
-  if (!existedUser) {
-    throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
-  }
-
-  if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
-  ) {
-    throw new myAppError(
-      StatusCodes.UNAUTHORIZED,
-      `User is ${existedUser.status}`,
-    );
-  }
-  // if user already deleted
-  if (existedUser.isDeleted === true) {
-    throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
-  }
-
-  const hasedpassword = await bcrypt.hash(
-    plainPassword as string,
-    Number(envVarriables.BCRYPT_SALT_ROUND as string),
-  );
-  const updatedpassword = await userModel.findByIdAndUpdate(
-    existedUser._id,
-    { password: hasedpassword },
-    { runValidators: true, new: true },
-  );
-
-  if (!updatedpassword) {
-    throw new myAppError(
-      StatusCodes.BAD_GATEWAY,
-      "Changing password is failed",
-    );
+// delete user by id
+const deleteUser = async (id: string) => {
+  const deletedUser = await userModel.findByIdAndDelete(id);
+  if (!deletedUser) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "User not found");
   }
   return true;
 };
 
-// Updating password while logedIn
-const updatePassowrd = async (
-  oldPassword: string,
-  newPassword: string,
-  email: string,
-) => {
-  const existedUser = await userModel.findOne({ email });
-  if (!existedUser) {
-    throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
+
+
+// update role user to agent by id - only admins are allowed
+const agentApproval = async (id: string) => {
+  const alreadyApproved = await userModel
+    .findOne({
+      _id: id,
+      role: ROLE.AGENT,
+      isAgentApproved: true,
+    })
+    .select("-password");
+  console.log(`alreadyApproved ${alreadyApproved}`);
+
+  let message: string = "";
+  if (alreadyApproved) {
+    message = "User already approved as agent";
+    return {
+      message,
+      alreadyApproved,
+    };
   }
 
-  if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
-  ) {
+  const updatedToAgent = await userModel
+    .findOneAndUpdate(
+      { _id: id, role: ROLE.USER, isAgentApproved: false },
+      { role: ROLE.AGENT, isAgentApproved: true },
+      { runValidators: true, new: true },
+    )
+    .select("-password");
+  console.log(`updatedToAgent ${updatedToAgent}`);
+
+  if (!updatedToAgent || updatedToAgent === null) {
     throw new myAppError(
-      StatusCodes.UNAUTHORIZED,
-      `User is ${existedUser.status}`,
+      StatusCodes.BAD_REQUEST,
+      "Failed to update user to agent",
     );
   }
-  // if user already deleted
-  if (existedUser.isDeleted === true) {
-    throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
-  }
+  message = "Successfully updated user role to agent";
+  return {
+    message,
+    updatedToAgent,
+  };
+};
 
-  const isValidPassword = await bcrypt.compare(
-    oldPassword,
-    existedUser.password,
-  );
-  if (!isValidPassword) {
-    throw new myAppError(StatusCodes.NOT_FOUND, "Invalid Password");
-  }
+// update agent status in a toggle system by id - only admins are allowed
+const agentStatusToggle = async (id: string) => {
+  const updatedToAgent = await userModel
+    .findOneAndUpdate(
+      { _id: id, role: ROLE.AGENT },
+      [
+        {
+          $set: {
+            isAgentApproved: { $not: "$isAgentApproved" },
+          },
+        },
+      ],
+      { runValidators: true, new: true },
+    )
+    .select("-password");
 
-  const hasedpassword = await bcrypt.hash(
-    newPassword as string,
-    Number(envVarriables.BCRYPT_SALT_ROUND as string),
-  );
-  const updatedpassword = await userModel.findByIdAndUpdate(
-    existedUser._id,
-    { password: hasedpassword },
-    { runValidators: true, new: true },
-  );
-
-  if (!updatedpassword) {
+  if (!updatedToAgent || updatedToAgent === null) {
+    if (envVarriables.NODE_ENV === "Development") {
+      console.log("User not created yet");
+    }
     throw new myAppError(
-      StatusCodes.BAD_GATEWAY,
-      "updating password is failed",
+      StatusCodes.BAD_REQUEST,
+      "Failed to update agent status",
     );
   }
-  return true;
+
+  return updatedToAgent;
+};
+
+
+
+// get all agents
+const allAgents = async () => {
+  const agents = await userModel
+    .find({
+      role: ROLE.AGENT,
+    })
+    .select("-password");
+  if (agents.length === 0) {
+    if (envVarriables.NODE_ENV === "Development") {
+      console.log("user not created yet");
+    }
+  }
+  console.log(`All agents: ${agents}`);
+
+  const agentsCount = await userModel.countDocuments({
+    role: ROLE.AGENT,
+    isAgentApproved: true,
+  });
+  console.log({
+    meta: agentsCount,
+    data: agents,
+  });
+
+  return {
+    meta: agentsCount,
+    data: agents,
+  };
+};
+
+// get an agents by user id
+const getSingelAgent = async (id: string) => {
+  const agent = await userModel
+    .find({
+      _id: id,
+      role: ROLE.AGENT,
+      isAgentApproved: true,
+    })
+    .select("-password");
+  if (!agent || agent === null) {
+    if (envVarriables.NODE_ENV === "Development") {
+      console.log("user not created yet");
+    }
+  }
+  return agent;
 };
 
 export const userServices = {
@@ -260,6 +293,9 @@ export const userServices = {
   updateUser,
   allUser,
   singelUser,
-  changePassowrd,
-  updatePassowrd,
+  allAgents,
+  getSingelAgent,
+  agentApproval,
+  agentStatusToggle,
+  deleteUser,
 };

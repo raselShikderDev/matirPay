@@ -5,6 +5,8 @@ import sendResponse from "../../utils/sendResponse";
 import { authServices } from "./auth.service";
 import generateTokens from "../../utils/generateTokens";
 import setCookies from "../../utils/setCookies";
+import { JwtPayload } from "jsonwebtoken";
+import myAppError from "../../errorHelper";
 
 
 // Credential login
@@ -37,16 +39,16 @@ const credentialsLogin = asyncFunc(
 // generating new access Tokens
 const generateNewTokens =asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    const accessToken = req.cookies.refreshToen
-    const newAccessToken = await authServices.generateNewTokens(accessToken)
+    const refreshToken = req.cookies.refreshToken
+    const newAccessToken = await authServices.generateNewTokens(refreshToken as string);
 
-    await setCookies(res, newAccessToken);
+    await setCookies(res, newAccessToken)
 
     sendResponse(res, {
-      success: true,
       statusCode: StatusCodes.OK,
-      message: "New ccess token successfully generated",
-      data: newAccessToken,
+      success: true,
+      message: "New accessToken successfully generated",
+      data: newAccessToken.accessToken,
     });
 
   })
@@ -75,8 +77,46 @@ const loggedOut = asyncFunc(
   }
 );
 
+// Updating password while logedIn
+const updatePassowrd = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const decodedToken = req.user as JwtPayload
+    const {oldPassword, newPassowrd} = req.body   
+    authServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.CREATED,
+      message: "Successfully updated password",
+      data: null,
+    });
+  }
+);
+
+
+// Chnaging password after forgeting
+const resetPassowrd = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const {email, newPlainPassword} = req.body
+   
+    const passwordChnaged = await authServices.resetPassowrd(email, newPlainPassword)
+if (!passwordChnaged) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
+  }
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.CREATED,
+      message: "Successfully password chnaged",
+      data: null,
+    });
+  }
+);
+
+
 export const authController = {
   credentialsLogin,
   loggedOut,
   generateNewTokens,
+  updatePassowrd,
+  resetPassowrd,
 };

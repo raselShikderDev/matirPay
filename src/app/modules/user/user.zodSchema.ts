@@ -1,5 +1,4 @@
 import z from "zod";
-import { ROLE } from "./user.interfaces";
 
 enum roles {
   USER = "USER",
@@ -47,13 +46,6 @@ export const updateUserZodSchema = z.object({
     .min(3, { message: "name must be at least three character" })
     .max(50, { message: "name should contain maximum 50 chacacter" })
     .optional(),
-  password: z
-    .string({ message: "Invalid password type" })
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}:;<>,.?~\\/-]).{8,}$/,
-      "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
-    )
-    .optional(),
   phone: z
     .string({ message: "Invalid phone type" })
     .regex(
@@ -67,31 +59,4 @@ export const updateUserZodSchema = z.object({
     .optional(),
 });
 
-export const chnagePasswordZodSchema = z.object({
-  email: z
-    .string({ message: "Invalid email address formate" })
-    .min(5, { message: "email should be at least 5 character" })
-    .max(50, { message: "email should contain maximum 50 chacacter" })
-    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-  password: z
-    .string({ message: "Invalid password type" })
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}:;<>,.?~\\/-]).{8,}$/,
-      "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
-    )
-});
 
-export const updatePasswordZodSchema = z.object({
-  newPassowrd: z
-    .string({ message: "Invalid password type" })
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}:;<>,.?~\\/-]).{8,}$/,
-      "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
-    ),
-  oldPassword: z
-    .string({ message: "Invalid password type" })
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}:;<>,.?~\\/-]).{8,}$/,
-      "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
-    )
-});

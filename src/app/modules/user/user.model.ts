@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema<IUser>(
       required: true,
       unique: true,
     },
-    password: { type: String, select: false },
+    password: { type: String},
     role: {
       type: String,
       enum: Object.values(ROLE),
