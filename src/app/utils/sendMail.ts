@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import path from "path";
 import { envVarriables } from "../configs/envVars.config";
 import myAppError from "../errorHelper";
@@ -21,6 +22,7 @@ export interface sendEmailOptions {
   to: string;
   subject: string;
   templateName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   templateData?: Record<string, any>;
   attachments?: {
     fileName: string;
@@ -52,6 +54,7 @@ export const sendMail = async ({
       })),
     });
     console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.log("email sending error", error.message);
     throw new myAppError(StatusCodes.BAD_GATEWAY, error.message);

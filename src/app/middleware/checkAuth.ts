@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { NextFunction, Request, Response } from "express";
 import { userModel } from "../modules/user/user.model";
 import myAppError from "../errorHelper";

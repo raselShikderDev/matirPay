@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
 import crypto from "crypto";
@@ -8,6 +9,7 @@ import { envVarriables } from "../../configs/envVars.config";
 
 
 const otpExpires = 60 * 5;
+
 
 const generateOtp = (length = 6) => {
   const otp = crypto.randomInt(10 ** (length - 1), 10 ** length).toString();
