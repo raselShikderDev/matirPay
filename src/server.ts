@@ -1,6 +1,9 @@
+/* eslint-disable no-console */
 import mongoose from "mongoose";
 import app from "./app";
 import { envVarriables } from "./app/configs/envVars.config";
+import seedSuperAdmin from "./app/utils/seedSuperAdmin";
+import { conectRedis } from "./app/configs/redis.config";
 
 const PORT = envVarriables.PORT as string;
 
@@ -30,6 +33,8 @@ const startServer = async () => {
   }
 };
 
-
-
- startServer();
+(async function () {
+  await startServer();
+  await conectRedis()
+  await seedSuperAdmin();
+})();

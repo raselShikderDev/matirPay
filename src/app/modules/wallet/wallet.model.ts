@@ -1,5 +1,7 @@
 import mongoose, { Schema } from "mongoose";
-import { IWallet, WALLET_CURRENCY, WALLET_STATUS } from "./wallet.interafce";
+import { IBalanceAvailablity, IWallet, WALLET_CURRENCY, WALLET_STATUS } from "./wallet.interafce";
+import myAppError from "../../errorHelper";
+import { StatusCodes } from "http-status-codes";
 
 const walletSchema = new mongoose.Schema<IWallet>(
   {
@@ -24,7 +26,7 @@ const walletSchema = new mongoose.Schema<IWallet>(
     },
     balance: {
       type: Number,
-      default: 50,
+      required: true,
     },
     transactions: {
       type: [
@@ -39,7 +41,22 @@ const walletSchema = new mongoose.Schema<IWallet>(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
-export const walletModel = mongoose.model<IWallet>("wallet", walletSchema);
+walletSchema.static(
+  "balanceAvailablity",
+  async function (requestedAmount: number, senderWalletId: string) {
+    const wallet = await this.findOneAndUpdate(
+      { _id: senderWalletId, balance: { $gte: requestedAmount } },
+      { $inc: { balance: -requestedAmount } },
+      { runValidators: true, new: true },
+    );
+    if (!wallet) {
+       throw new myAppError(StatusCodes.BAD_REQUEST, "Insufficient balance or wallet not found");
+    }
+    return wallet
+  },
+);
+
+export const walletModel = mongoose.model<IWallet, IBalanceAvailablity>("wallet", walletSchema);

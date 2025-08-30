@@ -1,30 +1,51 @@
 {
+  "name": "matirpay",
+  "type": "commonjs",
+  "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "lint": "eslint . --ext .ts"
+    "start": "node ./dist/server.js",
+    "build": "tsc && cpx \"src/public/**/*\" dist/public",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ./src"
   },
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.9",
+    "@types/ejs": "^3.1.5",
+    "@types/express-session": "^1.18.2",
+    "@types/nodemailer": "^7.0.1",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
+    "nodemailer": "^7.0.5",
+    "redis": "^5.8.2",
     "zod": "^4.1.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@types/bun": "latest",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
+    "cpx": "^1.5.0",
     "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0"
   }
 }

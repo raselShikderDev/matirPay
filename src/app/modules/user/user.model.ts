@@ -29,11 +29,11 @@ const userSchema = new mongoose.Schema<IUser>(
       required: true,
       unique: true,
     },
-    password: String,
+    password: { type: String},
     role: {
       type: String,
       enum: Object.values(ROLE),
-      default: ROLE.USER,
+      required: true,
     },
     phone: String,
     picture: String,

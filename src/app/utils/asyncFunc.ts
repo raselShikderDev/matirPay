@@ -8,9 +8,9 @@ type TAsyncFunc = (
 
 const asyncFunc =
   (func: TAsyncFunc) => (req: Request, res: Response, next: NextFunction) =>
-    Promise.resolve((req: Request, res: Response, next: NextFunction) =>
+    Promise.resolve(
       func(req, res, next).catch((err) => {
         next(err);
       })
     );
-export default asyncFunc
+export default asyncFunc;
