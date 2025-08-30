@@ -30,9 +30,9 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
     throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
   }
 
-  // if (existedUser.isVerified === false) {
-  //   throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
-  // }
+  if (existedUser.isVerified === false) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+  }
 
   const isValidPassword = await bcrypt.compare(
     plainPassword,
@@ -43,6 +43,7 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
   }
 
   const userObj = existedUser.toObject();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...userWithoutPassword } = userObj;
 
   return userWithoutPassword;

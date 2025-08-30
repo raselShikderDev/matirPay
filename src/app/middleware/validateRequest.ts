@@ -1,5 +1,6 @@
+/* eslint-disable no-console */
 import { NextFunction, Request, Response } from "express";
-import z, { ZodObject, ZodRawShape } from "zod";
+import { ZodObject, ZodRawShape } from "zod";
 import { envVarriables } from "../configs/envVars.config";
 
 const validateRequest =

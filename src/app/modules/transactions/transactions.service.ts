@@ -21,9 +21,6 @@ const viewTransactionsHistory = async (
 
   // const transactions = await transactionModel.find({$or:[{fromWallet:user.walletId}, {toWallet:user.walletId}]}).sort({createdAt: -1})
 
-      console.log("In transaction service - query : :", query );
-
-
   const findTransaction = new QueryBuilder(
     transactionModel.find(),
     query as Record<string, string>,

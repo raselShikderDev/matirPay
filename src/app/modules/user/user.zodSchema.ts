@@ -1,9 +1,5 @@
 import z from "zod";
 
-enum roles {
-  USER = "USER",
-  AGENT = "AGENT",
-}
 
 export const createUserZodSchema = z.object({
   name: z

@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express";
 import asyncFunc from "../../utils/asyncFunc";
 import { IUser } from "./user.interfaces";
 import { userServices } from "./user.service";
 import sendResponse from "../../utils/sendResponse";
 import { StatusCodes } from "http-status-codes";
-import z from "zod";
 import mongoose, { Types } from "mongoose";
 import myAppError from "../../errorHelper";
 import { JwtPayload } from "jsonwebtoken";
@@ -29,9 +29,8 @@ const createUser = asyncFunc(
 // Updating user info
 const updateUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    z.parseAsync
+    
     const payload: Partial<IUser> = req.body;
-    console.log("Receive update user request in - controller with body: ", payload);
     const newUser = await userServices.createUser(payload);
 
     sendResponse(res, {
@@ -48,7 +47,6 @@ const updateUser = asyncFunc(
 const allUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const query = req.query
-    console.log("req.query: ", req.query);
     
     const {data, meta} = await userServices.allUser(query as Record<string, string>)
     sendResponse(res, {

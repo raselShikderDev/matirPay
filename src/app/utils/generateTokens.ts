@@ -11,12 +11,17 @@ const generateTokens = async (user: Partial<IUser>) => {
 
   const accessToken = await Jwt.sign(jwtPayload, envVarriables.JWT_ACCESS_SECRET as string, {expiresIn:envVarriables.JWT_ACCESS_EXPIRES} as SignOptions)
   
-  console.log("accessToken in generateToken: ", accessToken)
   
   const refreshToken = await Jwt.sign(jwtPayload, envVarriables.JWT_REFRESH_SECRET as string, {expiresIn:envVarriables.JWT_REFRESH_EXPIRES} as SignOptions)
 
-    console.log("accessToken in generateToken: ", accessToken)
-
+if (envVarriables.NODE_ENV === "Development") {
+  // eslint-disable-next-line no-console
+  console.log({
+    refreshToken:refreshToken,
+    accessToken: accessToken
+  });
+  
+}
 
   return{
     accessToken,

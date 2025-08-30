@@ -1,6 +1,7 @@
+/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
-import { IAuthProvider, IUser, ROLE, USER_STATUS } from "./user.interfaces";
+import { IUser, ROLE } from "./user.interfaces";
 import { userModel } from "./user.model";
 import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
@@ -65,10 +66,12 @@ const createUser = async (payload: Partial<IUser>) => {
     }
 
     const userObj = updateUserIncludingWalletId.toObject();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = userObj;
 
     await session.commitTransaction();
     return userWithoutPassword;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     await session.abortTransaction();
     if (envVarriables.NODE_ENV === "Development") {
@@ -178,9 +181,8 @@ const agentApproval = async (id: string) => {
       isAgentApproved: true,
     })
     .select("-password");
-  console.log(`alreadyApproved ${alreadyApproved}`);
 
-  let message: string = "";
+  let message = "";
   if (alreadyApproved) {
     message = "User already approved as agent";
     return {
@@ -196,7 +198,6 @@ const agentApproval = async (id: string) => {
       { runValidators: true, new: true },
     )
     .select("-password");
-  console.log(`updatedToAgent ${updatedToAgent}`);
 
   if (!updatedToAgent || updatedToAgent === null) {
     throw new myAppError(
@@ -254,15 +255,10 @@ const allAgents = async () => {
       console.log("user not created yet");
     }
   }
-  console.log(`All agents: ${agents}`);
 
   const agentsCount = await userModel.countDocuments({
     role: ROLE.AGENT,
     isAgentApproved: true,
-  });
-  console.log({
-    meta: agentsCount,
-    data: agents,
   });
 
   return {

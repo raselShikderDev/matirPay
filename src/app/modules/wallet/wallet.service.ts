@@ -5,14 +5,12 @@ import { ROLE, USER_STATUS } from "../user/user.interfaces";
 import { envVarriables } from "../../configs/envVars.config";
 import { walletModel } from "../wallet/wallet.model";
 import { WALLET_STATUS } from "../wallet/wallet.interafce";
-import { Types } from "mongoose";
-import { transactionModel } from "../transactions/transactions.model";
 import {
   ITransaction,
-  TransactionInitiatedBy,
   TransactionType,
 } from "../transactions/transactions.interface";
 import { JwtPayload } from "jsonwebtoken";
+import { transactionModel } from "../transactions/transactions.model";
 
 type RequiredTransactionInput = Pick<
   ITransaction,
@@ -188,8 +186,8 @@ const userSendMOney = async (
       amount,
       type: TransactionType.SEND_MONEY,
       initiatedBy: decodedToken.role,
-      fromWallet: updatedSenderWallet._id!,
-      toWallet: updateReceiverWallet._id!,
+      fromWallet: senderWallet._id,
+      toWallet: updateReceiverWallet._id,
     };
 
     const tansactionHistory = await transactionModel.create([senderPayload], {
@@ -334,8 +332,8 @@ const userCashOut = async (
       amount,
       type: TransactionType.CASH_OUT,
       initiatedBy: decodedToken.role,
-      fromWallet: updatedSenderWallet._id!,
-      toWallet: updateAgentWallet._id!,
+      fromWallet: senderWallet._id,
+      toWallet: updateAgentWallet._id,
     };
 
     const tansactionHistory = await transactionModel.create([senderPayload], {
@@ -476,8 +474,8 @@ const agentCashIn = async (
       amount,
       type: TransactionType.CASH_IN,
       initiatedBy: decodedToken.role,
-      fromWallet: updatedAgentWallet._id!,
-      toWallet: updateUserWallet._id!,
+      fromWallet: senderWallet._id,
+      toWallet: updateUserWallet._id,
     };
 
     const tansactionHistory = await transactionModel.create([senderPayload], {
