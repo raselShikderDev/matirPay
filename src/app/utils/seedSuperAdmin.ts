@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import { envVarriables } from "../configs/envVars.config";
 import myAppError from "../errorHelper";
@@ -80,6 +81,7 @@ const seedSuperAdmin = async () => {
  if (envVarriables.NODE_ENV === "Development")
       console.log("Super Admin created successfully");
     await session.commitTransaction();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     await session.abortTransaction();
     if (envVarriables.NODE_ENV === "Development") {

@@ -14,7 +14,6 @@ export class QueryBuilder<T> {
 
   filter(): this {
     const queries = { ...this.query };
-    console.log("In qury builder - queries: ", queries);
 
     const filter: Record<string, string> = {};
     for (const feild of includeFeild) {
@@ -22,7 +21,6 @@ export class QueryBuilder<T> {
         filter[feild] = queries[feild];
       }
     }
-console.log("In qury builder - filter: ", filter);
 
     this.modelQuery = this.modelQuery.find(filter);
 
