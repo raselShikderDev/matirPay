@@ -6,30 +6,41 @@ import notFound from "./app/middleware/notFound";
 import path from "path";
 import mainRouter from "./app/routes";
 import { envVarriables } from "./app/configs/envVars.config";
-import session from "express-session"
+import expressSession from "express-session";
 
 const app: Application = express();
 
-app.use(express.static(path.join(__dirname, "../public")));
-
-app.use(session({
-    secret:envVarriables.EXPRESS_SESSION_SECRET as string,
-    resave:false,
-    saveUninitialized:true,
-    cookie:{
-        secure:false,
-    }
-}))
-
-app.use(cors({
-    origin:envVarriables.FRONEND_URL as string,
-    credentials:true,
-}))
-
-app.use(express.json());
-app.use(cors());
-app.set("proxy", 1);
+app.set("trust proxy", 1);
+app.use(
+  cors({
+    origin: envVarriables.FRONEND_URL as string,
+    credentials: true,
+  }),
+);
+app.use(
+  expressSession({
+    secret: envVarriables.EXPRESS_SESSION_SECRET as string,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: true,
+      httpOnly: true,
+      sameSite: "none",
+    },
+  }),
+);
 app.use(cookieParser());
+app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: envVarriables.FRONEND_URL as string,
+    credentials: true,
+  }),
+);
+
+app.use(express.static(path.join(__dirname, "../public")));
 
 app.use("/api/v1", mainRouter);
 
