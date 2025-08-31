@@ -28,6 +28,7 @@ const sendVerifyOtp = async (email: string) => {
   const otp = generateOtp();
   const redisKey = `otp:${existedUser.email}`;
 
+  // Setting otp in redis and checking
   await redisClient.set(redisKey, otp, {
     expiration: {
       type: "EX",
@@ -36,9 +37,12 @@ const sendVerifyOtp = async (email: string) => {
   });
 
   const storedOtp = await redisClient.get(redisKey);
-    if (!storedOtp) {
-      throw new myAppError(StatusCodes.BAD_GATEWAY ,`OTP could not be stored in Redis for key: ${redisKey}`);
-    }
+  if (!storedOtp) {
+    throw new myAppError(
+      StatusCodes.BAD_GATEWAY,
+      `OTP could not be stored in Redis for key: ${redisKey}`,
+    );
+  }
 
   const templateData = {
     name: existedUser.name,
@@ -53,12 +57,15 @@ const sendVerifyOtp = async (email: string) => {
     templateData,
   };
 
+  // Sending email
   const info = await sendMail(payload);
   const isSent = info.accepted && info.accepted.length > 0;
   if (!isSent) {
-    console.log("Email was not sent. Rejected:", info.rejected);
+    if (envVarriables.NODE_ENV === "Development")
+      console.log("Email was not sent. Rejected:", info.rejected);
   } else {
-    console.log("Email sent successfully!");
+    if (envVarriables.NODE_ENV === "Development")
+      console.log("Email sent successfully!");
   }
 
   if (envVarriables.NODE_ENV === "Development") {
