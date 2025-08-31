@@ -53,7 +53,19 @@ export const sendMail = async ({
         contentType: attachment.contentType,
       })),
     });
-    console.log(`\u2709\uFE0F Email sent to ${to}: ${info.messageId}`);
+   const isSent = info.accepted && info.accepted.includes(to);
+
+    if (!isSent) {
+      console.log("Email not accepted by SMTP server", info.rejected);
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        `Email not sent to ${to}. Rejected: ${info.rejected.join(", ")}`
+      );
+    }
+
+    console.log(`\u2709\uFE0F Email successfully sent to ${to}: ${info.messageId}`);
+    return info;
+    
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.log("email sending error", error.message);
