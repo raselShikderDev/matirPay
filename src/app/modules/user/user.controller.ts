@@ -88,7 +88,7 @@ const getMe = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const decodedToken = req.user as JwtPayload
    
-    const user = await userServices.singelUser(decodedToken.userId)
+    const user = await userServices.singelUser(decodedToken.id)
 
     sendResponse(res, {
       success: true,

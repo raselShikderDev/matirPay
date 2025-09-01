@@ -11,13 +11,47 @@ export const redisClient = createClient({
     port: Number(envVarriables.REDIS.REDIS_PORT as string),
   },
 });
-redisClient.on("error", (err: any) => console.log("Redis Client Error", err));
+
+redisClient.on(
+  "connect",
+  () =>
+    envVarriables.NODE_ENV === "Development" &&
+    console.log("Redis: connecting..."),
+);
+
+redisClient.on(
+  "ready",
+  () =>
+    envVarriables.NODE_ENV === "Development" &&
+    console.log("Redis: ready to accept commands"),
+);
+
+redisClient.on(
+  "reconnecting",
+  () =>
+    envVarriables.NODE_ENV === "Development" &&
+    console.log("Redis: reconnecting..."),
+);
+
+redisClient.on(
+  "end",
+  () =>
+    envVarriables.NODE_ENV === "Development" &&
+    console.log("Redis: connection closed"),
+);
+
+redisClient.on(
+  "error",
+  (err: any) =>
+    envVarriables.NODE_ENV === "Development" &&
+    console.log("Redis Client Error", err),
+);
 
 export const conectRedis = async () => {
   if (!redisClient.isOpen) {
     await redisClient.connect();
     if (envVarriables.NODE_ENV === "Development") {
-        console.log("Redis successfully connected");
+      console.log("Redis successfully connected");
     }
   }
 };

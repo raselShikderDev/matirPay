@@ -7,15 +7,12 @@ import { userModel } from "../user/user.model";
 import { redisClient } from "../../configs/redis.config";
 import { envVarriables } from "../../configs/envVars.config";
 
-
 const otpExpires = 60 * 5;
-
 
 const generateOtp = (length = 6) => {
   const otp = crypto.randomInt(10 ** (length - 1), 10 ** length).toString();
   return otp;
 };
-
 
 // Send otp
 const sendVerifyOtp = async (email: string) => {
@@ -31,12 +28,21 @@ const sendVerifyOtp = async (email: string) => {
   const otp = generateOtp();
   const redisKey = `otp:${existedUser.email}`;
 
+  // Setting otp in redis and checking
   await redisClient.set(redisKey, otp, {
     expiration: {
       type: "EX",
       value: otpExpires,
     },
   });
+
+  const storedOtp = await redisClient.get(redisKey);
+  if (!storedOtp) {
+    throw new myAppError(
+      StatusCodes.BAD_GATEWAY,
+      `OTP could not be stored in Redis for key: ${redisKey}`,
+    );
+  }
 
   const templateData = {
     name: existedUser.name,
@@ -50,16 +56,25 @@ const sendVerifyOtp = async (email: string) => {
     templateName: "sendOtp",
     templateData,
   };
-  await sendMail(payload);
+
+  // Sending email
+  const info = await sendMail(payload);
+  const isSent = info.accepted && info.accepted.length > 0;
+  if (!isSent) {
+    if (envVarriables.NODE_ENV === "Development")
+      console.log("Email was not sent. Rejected:", info.rejected);
+  } else {
+    if (envVarriables.NODE_ENV === "Development")
+      console.log("Email sent successfully!");
+  }
+
   if (envVarriables.NODE_ENV === "Development") {
     console.log("OTP: ", otp);
   }
 };
 
-
 // Verify otp
 const verifyOtp = async (email: string, otp: string) => {
-
   const user = await userModel.findOne({ email });
 
   if (!user) {
@@ -75,10 +90,12 @@ const verifyOtp = async (email: string, otp: string) => {
   const savedOtp = await redisClient.get(rediskey);
 
   if (!savedOtp) {
+    console.log("otp not found in redis");
     throw new myAppError(401, "Invalid OTP");
   }
 
   if (savedOtp !== otp) {
+    console.log("otp does not matched")
     throw new myAppError(401, "Invalid OTP");
   }
 
@@ -97,7 +114,6 @@ const verifyOtp = async (email: string, otp: string) => {
   }
   return true;
 };
-
 
 export const otpService = {
   sendVerifyOtp,
