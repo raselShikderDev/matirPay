@@ -90,10 +90,12 @@ const verifyOtp = async (email: string, otp: string) => {
   const savedOtp = await redisClient.get(rediskey);
 
   if (!savedOtp) {
+    console.log("otp not found in redis");
     throw new myAppError(401, "Invalid OTP");
   }
 
   if (savedOtp !== otp) {
+    console.log("otp does not matched")
     throw new myAppError(401, "Invalid OTP");
   }
 
