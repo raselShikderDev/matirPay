@@ -36,6 +36,18 @@ router.get(
   checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN),
   walletController.allWallet
 );
+// Retrving logged is user's wallet by id
+router.get(
+  "/my-wallet",
+  checkAuth(...Object.values(ROLE)),
+  walletController.getMyWallet
+);
+//get total Active wallet - only admins are allowed
+router.get(
+  "/active-wallets",
+  checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN),
+  walletController.totalActiveWallet
+);
 // Update wallet status Block/Active by id - only for admins and super admins
 router.patch(
   "/status/:id",

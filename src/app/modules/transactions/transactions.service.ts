@@ -46,21 +46,26 @@ const viewTransactionsHistory = async (
 
 
 // View all transactin occured - only admin and super admin aare allowed
-const allTransaction = async () => {
-  const transactions = await transactionModel.find().sort({ createdAt: -1 });
+const allTransaction = async (query:Record<string, string>) => {
+  const findTransaction = new QueryBuilder(
+    transactionModel.find(),
+    query as Record<string, string>,
+  );
+  const tansactions = await findTransaction
+    .search()
+    .filter()
+    .sort()
+    .fields()
+    .paginate();
 
-  if (transactions.length === 0) {
-    throw new myAppError(
-      StatusCodes.NOT_FOUND,
-      "Retrving all transaction is failed",
-    );
-  }
-
-  const transactionCount = await transactionModel.countDocuments();
+  const [data, meta] = await Promise.all([
+    tansactions.build(),
+    findTransaction.getMeta(),
+  ]);
 
   return {
-    meta: transactionCount,
-    data: transactions,
+    data,
+    meta,
   };
 };
 
@@ -144,9 +149,29 @@ const singelUserTransaction = async (email: string, query:Record<string, string>
 // };
 
 
+// total Transaction Amount
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const toalTransactionAmount = async(query:Record<string, string>)=>{
+  
+  const totalTransactionAmount = await transactionModel.aggregate([
+   {
+            $group: {
+                _id: "$balance", 
+                totalSum: { $sum: "$balance" }
+            }
+        } 
+  
+  ])
+  return{
+    totalTransactionAmount,
+  }
+}
+
+
 export const transactionServices = {
   viewTransactionsHistory,
   singelUserTransaction,
   allTransaction,
   // myTransaction,
+  toalTransactionAmount,
 };

@@ -24,6 +24,37 @@ const allWallet = asyncFunc(
   },
 );
 
+// get total Active wallet - only admins are allowed
+const totalActiveWallet = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {    
+    const totalCurrentActiveWallet = await walletServices.totalActiveWallet();
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Successfully retrived total current active wallet",
+      data: totalCurrentActiveWallet,
+    });
+  },
+);
+// Retrving logged is user's wallet by id
+const getMyWallet = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.user.id;
+    if (!mongoose.isValidObjectId(id)) {
+      throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid");
+    }
+    const walletData = await walletServices.getMyWallet(id, req.user);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Successfully retrived wallet",
+      data: walletData,
+    });
+  },
+);
+
+
+
 // Get singel wallet by id - Only admin and super admins are allowed
 const singelWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -126,4 +157,6 @@ export const walletController = {
   walletStatusToggle,
   userCashOut,
   agentCashIn,
+  getMyWallet,
+  totalActiveWallet,
 };

@@ -96,9 +96,9 @@ for (const [key, value] of Object.entries(query)) {
 
 // View all transactin - Only Admin and super admin are allowed
 const allTransaction = asyncFunc(async (req:Request, res:Response, next:NextFunction)=>{
-  
-    const userTransactions = await transactionServices.allTransaction()
-    if (userTransactions.data.length === 0) {
+  const query = req.query
+    const totalTransactions = await transactionServices.allTransaction(query as Record<string, string>)
+    if (totalTransactions.data.length === 0) {
       throw new myAppError(
         StatusCodes.NOT_FOUND,
         "Retrving alltransaction is failed"
@@ -109,13 +109,30 @@ const allTransaction = asyncFunc(async (req:Request, res:Response, next:NextFunc
     statusCode:StatusCodes.OK,
     success:true,
     message:"Successfully retrived all transaction",
-    data:userTransactions.data,
-    meta:{
-      total:userTransactions.meta,
-    }
+    data:totalTransactions.data,
+    meta:totalTransactions.meta,
     })
 })
 
+// total transaction occured
+const totalTransactionsAmount = asyncFunc(async (req:Request, res:Response, next:NextFunction)=>{
+  const query = req.query
+    const transactionsAmount = await transactionServices.toalTransactionAmount(query as Record<string, string>)
+    if (!transactionsAmount) {
+      throw new myAppError(
+        StatusCodes.NOT_FOUND,
+        "Retrving alltransaction is failed"
+      );
+    }
+    
+    sendResponse(res, {
+    statusCode:StatusCodes.OK,
+    success:true,
+    message:"Successfully retrived all transaction",
+    data:transactionsAmount.totalTransactionAmount,
+    // meta:transactionsAmount.meta,
+    })
+})
 
 
 export const transactionController ={
@@ -123,4 +140,5 @@ export const transactionController ={
     singelUserTransaction,
     allTransaction,
     // myTransaction,
+    totalTransactionsAmount
 }

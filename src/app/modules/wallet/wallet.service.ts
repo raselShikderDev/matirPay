@@ -24,6 +24,10 @@ const allWallet = async () => {
     if (envVarriables.NODE_ENV === "Development") {
       // eslint-disable-next-line no-console
       console.log("Neither user nor agent created yet");
+      throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Neither user nor agent created yet",
+    );
     }
   }
   const walletsCount = await walletModel.countDocuments();
@@ -37,14 +41,47 @@ const allWallet = async () => {
 const singelWallet = async (id: string) => {
   const wallet = await walletModel.findById(id);
   if (!wallet) {
-    if (envVarriables.NODE_ENV === "Development") {
-      // eslint-disable-next-line no-console
-      console.log("Neither user nor agent created yet");
-    }
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "No wallet found",
+    );
   }
+
+
+
+  return wallet;
+};
+// Retrving logged is user's wallet by id
+const getMyWallet = async (id: string, decodedToken:JwtPayload) => {
+  const wallet = await walletModel.findById(id);
+  if (!wallet) {
+    throw new myAppError(
+      StatusCodes.NOT_FOUND,
+      "No user found",
+    );
+  }
+
+if (wallet.user !== decodedToken.id) {
+  throw new myAppError(
+      StatusCodes.NOT_FOUND,
+      "You are not not atuorized to view ",
+    );
+}
+
   return wallet;
 };
 
+//  get total Active wallet - only admins are allowed
+const totalActiveWallet = async () => {
+  const totalCurrentActiveWallet = await walletModel.countDocuments({walletStatus:WALLET_STATUS.ACTIVE});
+  if (!totalCurrentActiveWallet) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Faild to get total active wallet",
+    );
+  }
+  return totalCurrentActiveWallet;
+};
 // Update wallet status Block/Active by id - only admins are allowed
 const walletStatusToggle = async (id: string) => {
   const updatedWallet = await walletModel.findOneAndUpdate({ _id: id }, [
@@ -505,4 +542,6 @@ export const walletServices = {
   agentCashIn,
   singelWallet,
   walletStatusToggle,
+  getMyWallet,
+  totalActiveWallet
 };
