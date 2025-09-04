@@ -7,7 +7,6 @@ import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
 import { walletModel } from "../wallet/wallet.model";
 
-
 // Creatung user with wa llet
 const createUser = async (payload: Partial<IUser>) => {
   const session = await walletModel.startSession();
@@ -18,6 +17,7 @@ const createUser = async (payload: Partial<IUser>) => {
     if (existedUser) {
       throw new myAppError(StatusCodes.CONFLICT, "Email already exists");
     }
+    console.log();
 
     payload.password = await bcrypt.hash(
       payload.password as string,
@@ -71,7 +71,7 @@ const createUser = async (payload: Partial<IUser>) => {
 
     await session.commitTransaction();
     return userWithoutPassword;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     await session.abortTransaction();
     if (envVarriables.NODE_ENV === "Development") {
@@ -102,7 +102,6 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "You are not permitted");
   }
 
-
   const updatedUser = await userModel.findByIdAndUpdate(
     existedUser._id,
     payload,
@@ -117,7 +116,7 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
 
 // Retriving all User - only admins are allowed
 const allUser = async (query: Record<string, string>) => {
-  const role = query.filter || "";
+  const role = query.role || "";
   const limit = Number(query.limit) || 10;
   const page = Number(query.page) || 1;
   const skip = (page - 1) * limit;
@@ -170,8 +169,6 @@ const deleteUser = async (id: string) => {
   return true;
 };
 
-
-
 // update role user to agent by id - only admins are allowed
 const agentApproval = async (id: string) => {
   const alreadyApproved = await userModel
@@ -213,14 +210,14 @@ const agentApproval = async (id: string) => {
 };
 
 // update agent status in a toggle system by id - only admins are allowed
-const agentStatusToggle = async (id: string) => {
-  const updatedToAgent = await userModel
+const agentAndUserStatusToggle = async (id: string) => {
+  const updatedToAgentAndUser = await userModel
     .findOneAndUpdate(
-      { _id: id, role: ROLE.AGENT },
+      { _id: id },
       [
         {
           $set: {
-            isAgentApproved: { $not: "$isAgentApproved" },
+            role: { $not: "$role" },
           },
         },
       ],
@@ -228,20 +225,18 @@ const agentStatusToggle = async (id: string) => {
     )
     .select("-password");
 
-  if (!updatedToAgent || updatedToAgent === null) {
+  if (!updatedToAgentAndUser || updatedToAgentAndUser === null) {
     if (envVarriables.NODE_ENV === "Development") {
-      console.log("User not created yet");
+      console.log("User or Agent not found");
     }
     throw new myAppError(
       StatusCodes.BAD_REQUEST,
-      "Failed to update agent status",
+      "Failed to update agent or User status",
     );
   }
 
-  return updatedToAgent;
+  return updatedToAgentAndUser;
 };
-
-
 
 // get all agents
 const allAgents = async () => {
@@ -255,11 +250,7 @@ const allAgents = async () => {
       console.log("user not created yet");
     }
   }
-
-  const agentsCount = await userModel.countDocuments({
-    role: ROLE.AGENT,
-    isAgentApproved: true,
-  });
+  const agentsCount = await userModel.countDocuments();
 
   return {
     meta: agentsCount,
@@ -284,6 +275,15 @@ const getSingelAgent = async (id: string) => {
   return agent;
 };
 
+// get count to total approved agent
+const getTotalApprovedAgentCount = async () => {
+  const agentsCount = await userModel.countDocuments({
+    role: ROLE.AGENT,
+    isAgentApproved: true,
+  });
+  return agentsCount;
+};
+
 export const userServices = {
   createUser,
   updateUser,
@@ -292,6 +292,7 @@ export const userServices = {
   allAgents,
   getSingelAgent,
   agentApproval,
-  agentStatusToggle,
+  agentAndUserStatusToggle,
   deleteUser,
+  getTotalApprovedAgentCount,
 };

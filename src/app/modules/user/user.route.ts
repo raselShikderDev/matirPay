@@ -42,13 +42,15 @@ router.get(
 router.get("/all-users", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.allUser)
 // Get all Agents - (Only admins and super admins are allowed)
 router.get("/all-agents", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.allAgents)
+// get count to total approved agent - (Only admins and super admins are allowed)
+router.get("/all-approved-agents-count", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.getTotalApprovedAgentCount)
 // Get singel Agent by id - (Only admins and super admins are allowed)
 router.get("/agents/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.getSingelAgent)
 
 // update user role to agent by id - (Only admins and super admins are allowed)
 router.patch("/agent-approve/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.agentApproval)
-// update agent status to in a toggle system by id - (Only admins and super admins are allowed)
-router.patch("/agent-status/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.agentStatusToggle)
+// update agent and user status to in a toggle system by id - (Only admins and super admins are allowed)
+router.patch("/agent-status/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.agentAndUserStatusToggle)
 // Delete user by id - (Only admins and super admins are allowed)
 router.delete("/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.deleteUser)
 // Retriving singel User - only admins are allowed
