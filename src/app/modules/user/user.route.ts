@@ -62,6 +62,9 @@ router.patch("/block/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userControll
 // Suspend  agent or User by id - only admins are allowed
 router.patch("/suspend/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.suspendUser)
 
+// Suspend  agent or User by id - only admins are allowed
+router.patch("/activate/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.activateUser)
+
 // update agent and user status to in a toggle system by id - (Only admins and super admins are allowed)
 router.patch("/agent-status/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.agentAndUserStatusToggle)
 

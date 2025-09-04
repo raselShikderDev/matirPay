@@ -344,6 +344,26 @@ if (!blockedUser || blockedUser === null) {
   
 }
 
+// Active a user or agent by id 
+const activateUser = async(id:string)=>{
+  const alreadyActive = await userModel.findOne({_id: id, status:{$ne:USER_STATUS.ACTIVE}}).select("-password");
+  if (!alreadyActive || alreadyActive === null) {
+    if (envVarriables.NODE_ENV === "Development") {
+      console.log("Already active");
+    }
+    throw new myAppError(StatusCodes.BAD_REQUEST, "Already active! Request could not processed")
+  }
+
+  const activatedUpdatedUser = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.ACTIVE}).select("-password");
+
+if (!activatedUpdatedUser || activatedUpdatedUser === null) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Activiting faild! Request could not processed")
+  }
+
+  return activatedUpdatedUser
+}
+
+
 // Suspend a user or agent by id 
 const suspendUser = async(id:string)=>{
   const alreadySuspended = await userModel.findOne({_id: id, status:USER_STATUS.SUSPENDED}).select("-password");
@@ -379,5 +399,6 @@ export const userServices = {
   getTotalApprovedAgentCount,
   agentSuspend,
   blockUser,
-  suspendUser
+  suspendUser,
+  activateUser
 };

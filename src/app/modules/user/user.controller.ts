@@ -246,6 +246,26 @@ const suspendUser = asyncFunc(
 );
 
 
+// Active a user or agent by id  by id - only admins are allowed
+const activateUser = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    if (!mongoose.isValidObjectId(id)) {
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
+    }
+    const data = await userServices.blockUser(id);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: `Status successfully updated to ${data.status}`,
+      data: data,
+    });
+  },
+);
+
+
+
 // get count to total approved agent
 const getTotalApprovedAgentCount = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -279,4 +299,5 @@ export const userController = {
   agentSuspend,
   blockUser,
   suspendUser,
+  activateUser,
 };
