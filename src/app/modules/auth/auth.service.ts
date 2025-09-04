@@ -17,8 +17,7 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
 
   // if user blocked or suspened
   if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
+    existedUser.status === USER_STATUS.BLOCKED
   ) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
@@ -73,8 +72,7 @@ const generateNewTokens = async (refreshToen: string) => {
 
   // if user blocked or suspened
   if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
+    existedUser.status === USER_STATUS.BLOCKED
   ) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
@@ -106,8 +104,7 @@ const updatePassowrd = async (
 
 
   if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
+    existedUser.status === USER_STATUS.BLOCKED
   ) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
@@ -156,8 +153,7 @@ const resetPassowrd = async (email: string, plainPassword: string) => {
   }
 
   if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
+    existedUser.status === USER_STATUS.BLOCKED 
   ) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,

@@ -46,8 +46,7 @@ const checkAuth =
 
       // if user blocked or suspened
       if (
-        existedUser.status === USER_STATUS.BLOCKED ||
-        existedUser.status === USER_STATUS.SUSPENDED
+        existedUser.status === USER_STATUS.BLOCKED
       ) {
         throw new myAppError(
           StatusCodes.UNAUTHORIZED,

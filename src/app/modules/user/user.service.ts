@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
-import { IUser, ROLE } from "./user.interfaces";
+import { IUser, ROLE, USER_STATUS } from "./user.interfaces";
 import { userModel } from "./user.model";
 import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
@@ -209,6 +209,46 @@ const agentApproval = async (id: string) => {
   };
 };
 
+// Suspend  agent by id - only admins are allowed
+const agentSuspend = async (id: string) => {
+  const notApproved = await userModel
+    .findOne({
+      _id: id,
+      role: ROLE.AGENT,
+      isAgentApproved: false,
+    })
+    .select("-password");
+
+  let message = "";
+  if (notApproved) {
+    message = "Agent is not approved yet";
+    return {
+      message,
+      notApproved,
+    };
+  }
+
+  const updatedStatusToSuspend = await userModel
+    .findOneAndUpdate(
+      { _id: id, role: ROLE.USER, isAgentApproved: false, status:USER_STATUS.ACTIVE },
+      { role: ROLE.AGENT, isAgentApproved: true },
+      { runValidators: true, new: true },
+    )
+    .select("-password");
+
+  if (!updatedStatusToSuspend || updatedStatusToSuspend === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Failed to update user to agent",
+    );
+  }
+  message = "Successfully chnaged status to suspened of agent";
+  return {
+    message,
+    updatedStatusToSuspend,
+  };
+};
+
 // update agent status in a toggle system by id - only admins are allowed
 const agentAndUserStatusToggle = async (id: string) => {
   const updatedToAgentAndUser = await userModel
@@ -284,6 +324,48 @@ const getTotalApprovedAgentCount = async () => {
   return agentsCount;
 };
 
+// Blcok a user or agent by id 
+const blockUser = async(id:string)=>{
+  const alreadyBlocked = await userModel.findOne({_id: id, status:USER_STATUS.BLOCKED}).select("-password");
+  if (!alreadyBlocked || alreadyBlocked === null) {
+    if (envVarriables.NODE_ENV === "Development") {
+      console.log("Already blcoked");
+    }
+    throw new myAppError(StatusCodes.BAD_REQUEST, "Already blcoked! Request could not processed")
+  }
+
+  const blockedUser = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.BLOCKED}).select("-password");
+
+if (!blockedUser || blockedUser === null) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Blocking faild! Request could not processed")
+  }
+
+  return blockedUser
+  
+}
+
+// Suspend a user or agent by id 
+const suspendUser = async(id:string)=>{
+  const alreadySuspended = await userModel.findOne({_id: id, status:USER_STATUS.SUSPENDED}).select("-password");
+  if (!alreadySuspended || alreadySuspended === null) {
+    if (envVarriables.NODE_ENV === "Development") {
+      console.log("Already Suspened");
+    }
+    throw new myAppError(StatusCodes.BAD_REQUEST, "Already suspened! Request could not processed")
+  }
+
+  const updatedStatusUserInfo = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.SUSPENDED}).select("-password");
+
+if (!updatedStatusUserInfo || updatedStatusUserInfo === null) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Suspending faild! Request could not processed")
+  }
+
+  return updatedStatusUserInfo
+  
+}
+
+
+
 export const userServices = {
   createUser,
   updateUser,
@@ -295,4 +377,7 @@ export const userServices = {
   agentAndUserStatusToggle,
   deleteUser,
   getTotalApprovedAgentCount,
+  agentSuspend,
+  blockUser,
+  suspendUser
 };

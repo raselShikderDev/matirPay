@@ -148,7 +148,7 @@ const agentApproval = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
     if (!mongoose.isValidObjectId(id)) {
-      throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid");
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID id is not valid");
     }
     const data = await userServices.agentApproval(id);
 
@@ -167,12 +167,36 @@ const agentApproval = asyncFunc(
   },
 );
 
+// Suspend  agent by id - only admins are allowed
+const agentSuspend = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    if (!mongoose.isValidObjectId(id)) {
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
+    }
+    const data = await userServices.agentSuspend(id);
+
+    if (data.updatedStatusToSuspend || data.updatedStatusToSuspend === null) {
+      throw new myAppError(
+        StatusCodes.BAD_REQUEST,
+        "Failed to update suspend agent",
+      );
+    }
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: data.message,
+      data: data.updatedStatusToSuspend,
+    });
+  },
+);
+
 // update agent status in a toggle system by id - only admins are allowed
 const agentAndUserStatusToggle = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
     if (!mongoose.isValidObjectId(id)) {
-      throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid");
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
     }
     const data = await userServices.agentAndUserStatusToggle(id);
 
@@ -184,6 +208,43 @@ const agentAndUserStatusToggle = asyncFunc(
     });
   },
 );
+
+// Blcok a user or agent by id  by id - only admins are allowed
+const blockUser = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    if (!mongoose.isValidObjectId(id)) {
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
+    }
+    const data = await userServices.blockUser(id);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: `Status successfully updated to ${data.status}`,
+      data: data,
+    });
+  },
+);
+
+// Suspend a user or agent by id  by id - only admins are allowed
+const suspendUser = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
+    if (!mongoose.isValidObjectId(id)) {
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
+    }
+    const data = await userServices.blockUser(id);
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: `Status successfully updated to ${data.status}`,
+      data: data,
+    });
+  },
+);
+
 
 // get count to total approved agent
 const getTotalApprovedAgentCount = asyncFunc(
@@ -214,5 +275,8 @@ export const userController = {
   getSingelAgent,
   agentApproval,
   agentAndUserStatusToggle,
-  getTotalApprovedAgentCount
+  getTotalApprovedAgentCount,
+  agentSuspend,
+  blockUser,
+  suspendUser,
 };
