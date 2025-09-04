@@ -171,82 +171,111 @@ const deleteUser = async (id: string) => {
 
 // update role user to agent by id - only admins are allowed
 const agentApproval = async (id: string) => {
-  const alreadyApproved = await userModel
-    .findOne({
-      _id: id,
-      role: ROLE.AGENT,
-      isAgentApproved: true,
-    })
-    .select("-password");
+const existedUser = await userModel.findById(id).select("-password");
+// console.log("existedUser", existedUser);
 
-  let message = "";
-  if (alreadyApproved) {
-    message = "User already approved as agent";
-    return {
-      message,
-      alreadyApproved,
-    };
+if (!existedUser || existedUser === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Agent not found",
+    );
   }
 
-  const updatedToAgent = await userModel
-    .findOneAndUpdate(
-      { _id: id, role: ROLE.USER, isAgentApproved: false },
-      { role: ROLE.AGENT, isAgentApproved: true },
-      { runValidators: true, new: true },
-    )
-    .select("-password");
 
+
+  if (existedUser.role !== ROLE.AGENT) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `${existedUser.role} can't be approve as agent directly! Register as Agent first`,
+    );
+  }
+
+    console.log("existedUser after role", existedUser);
+
+
+
+  if (existedUser.isVerified === false) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is not verified`,
+    );
+  }
+
+
+  if (existedUser.status !== USER_STATUS.ACTIVE) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is is ${existedUser.status}`,
+    );
+  }
+
+  if (existedUser.isAgentApproved === true) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `User already approved as agent`,
+    );
+  }
+
+  const updatedToAgent = await userModel.findByIdAndUpdate(id,{ role: ROLE.AGENT, isAgentApproved: true }, { runValidators: true, new: true },).select("-password");
+ 
   if (!updatedToAgent || updatedToAgent === null) {
     throw new myAppError(
       StatusCodes.BAD_REQUEST,
       "Failed to update user to agent",
     );
   }
-  message = "Successfully updated user role to agent";
-  return {
-    message,
-    updatedToAgent,
-  };
+console.log("updatedToAgent", updatedToAgent);
+
+  return updatedToAgent
 };
 
 // Suspend  agent by id - only admins are allowed
 const agentSuspend = async (id: string) => {
-  const notApproved = await userModel
-    .findOne({
-      _id: id,
-      role: ROLE.AGENT,
-      isAgentApproved: false,
-    })
-    .select("-password");
+  const existedUser = await userModel.findById(id).select("-password");
 
-  let message = "";
-  if (notApproved) {
-    message = "Agent is not approved yet";
-    return {
-      message,
-      notApproved,
-    };
-  }
-
-  const updatedStatusToSuspend = await userModel
-    .findOneAndUpdate(
-      { _id: id, role: ROLE.USER, isAgentApproved: false, status:USER_STATUS.ACTIVE },
-      { role: ROLE.AGENT, isAgentApproved: true },
-      { runValidators: true, new: true },
-    )
-    .select("-password");
-
-  if (!updatedStatusToSuspend || updatedStatusToSuspend === null) {
+if (!existedUser || existedUser === null) {
     throw new myAppError(
       StatusCodes.BAD_REQUEST,
-      "Failed to update user to agent",
+      "Agent not found",
     );
   }
-  message = "Successfully chnaged status to suspened of agent";
-  return {
-    message,
-    updatedStatusToSuspend,
-  };
+
+  if (existedUser.role !== ROLE.AGENT) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `${existedUser.role} can't be suspend as agent directly! Register as Agent first`,
+    );
+  }
+
+  if (existedUser.isVerified === false) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is not verified`,
+    );
+  }
+
+  if (existedUser.status !== USER_STATUS.ACTIVE) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is  ${existedUser.status}`,
+    );
+  }
+
+  if (existedUser.isAgentApproved === false) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `User already suspended as agent`,
+    );
+  }
+  const updatedToSuspended = await userModel.findByIdAndUpdate(id,{isAgentApproved: false }, { runValidators: true, new: true },).select("-password");
+ 
+  if (!updatedToSuspended || updatedToSuspended === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Failed to suspend agent",
+    );
+  }
+  return updatedToSuspended
 };
 
 // update agent status in a toggle system by id - only admins are allowed

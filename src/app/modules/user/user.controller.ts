@@ -147,22 +147,24 @@ const getSingelAgent = asyncFunc(
 const agentApproval = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
+    console.log("got agent aproval request in controller : ", id);
+    
     if (!mongoose.isValidObjectId(id)) {
-      throw new myAppError(StatusCodes.BAD_REQUEST, "ID id is not valid");
+      throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
     }
     const data = await userServices.agentApproval(id);
 
-    if (data.updatedToAgent || data.updatedToAgent === null) {
+    if (!data || data === null) {
       throw new myAppError(
         StatusCodes.BAD_REQUEST,
-        "Failed to update user to agent",
+        "Failed to aprrove agent",
       );
     }
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
-      message: data.message,
-      data: data.alreadyApproved,
+      message: "Successfully approved as agent",
+      data,
     });
   },
 );
@@ -176,17 +178,17 @@ const agentSuspend = asyncFunc(
     }
     const data = await userServices.agentSuspend(id);
 
-    if (data.updatedStatusToSuspend || data.updatedStatusToSuspend === null) {
+    if (!data || data === null) {
       throw new myAppError(
         StatusCodes.BAD_REQUEST,
-        "Failed to update suspend agent",
+        "Failed to suspend agent",
       );
     }
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
-      message: data.message,
-      data: data.updatedStatusToSuspend,
+      message: "Successfully agent suspend",
+      data: data,
     });
   },
 );
@@ -234,7 +236,7 @@ const suspendUser = asyncFunc(
     if (!mongoose.isValidObjectId(id)) {
       throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
     }
-    const data = await userServices.blockUser(id);
+    const data = await userServices.suspendUser(id);
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -253,7 +255,7 @@ const activateUser = asyncFunc(
     if (!mongoose.isValidObjectId(id)) {
       throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
     }
-    const data = await userServices.blockUser(id);
+    const data = await userServices.activateUser(id);
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,

@@ -130,19 +130,19 @@ const updatePassowrd = async (
     newPassword as string,
     Number(envVarriables.BCRYPT_SALT_ROUND as string),
   );
-  const updatedpassword = await userModel.findByIdAndUpdate(
+  const updatedNewPassword = await userModel.findByIdAndUpdate(
     existedUser._id,
     { password: hasedpassword },
     { runValidators: true, new: true },
   );
 
-  if (!updatedpassword) {
+  if (!updatedNewPassword) {
     throw new myAppError(
       StatusCodes.BAD_GATEWAY,
       "updating password is failed",
     );
   }
-  return true;
+  return updatedNewPassword;
 };
 
 // Chnaging password after forgeting

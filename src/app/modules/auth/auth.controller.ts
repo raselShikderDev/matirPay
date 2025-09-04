@@ -83,7 +83,11 @@ const updatePassowrd = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const decodedToken = req.user as JwtPayload
     const {oldPassword, newPassowrd} = req.body   
-    authServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+   const data = await authServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+
+    if (!data) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
+  }
 
     sendResponse(res, {
       success: true,
