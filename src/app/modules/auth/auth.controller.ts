@@ -121,9 +121,11 @@ if (!passwordChnaged) {
 // Chnaging password after forgeting
 const resetPassowrd = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {email, newPlainPassword} = req.body
+    const {id, newPassword} = req.body
+    const decodedToken = req.user
+    
    
-    const passwordChnaged = await authServices.resetPassowrd(email, newPlainPassword)
+    const passwordChnaged = await authServices.resetPassowrd(decodedToken, id, newPassword)
 if (!passwordChnaged) {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
   }

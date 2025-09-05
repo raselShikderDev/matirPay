@@ -24,6 +24,7 @@ router.patch(
 router.patch(
   "/reset-password",
   validateRequest(resetPasswordZodSchema),
+  checkAuth(...Object.values(ROLE)),
   authController.resetPassowrd,
 );
 

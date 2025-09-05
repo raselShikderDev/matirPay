@@ -17,6 +17,8 @@ type RequiredTransactionInput = Pick<
   "amount" | "type" | "toWallet"
 >;
 
+
+
 // Retrving all wallet
 const allWallet = async () => {
   const wallets = await walletModel.find();
@@ -46,11 +48,9 @@ const singelWallet = async (id: string) => {
       "No wallet found",
     );
   }
-
-
-
   return wallet;
 };
+
 // Retrving logged is user's wallet by id
 const getMyWallet = async (id: string, decodedToken:JwtPayload) => {
   const wallet = await walletModel.findById(id);

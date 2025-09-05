@@ -46,6 +46,7 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
   return userWithoutPassword;
 };
 
+
 const generateNewTokens = async (refreshToen: string) => {
   const verifyRefreshToken = (await Jwt.verify(
     refreshToen,
@@ -139,8 +140,13 @@ const updatePassowrd = async (
 };
 
 // Chnaging password after forgeting
-const resetPassowrd = async (email: string, plainPassword: string) => {
-  const existedUser = await userModel.findOne({ email });
+const resetPassowrd = async (decodedToken: JwtPayload, id:string, plainPassword: string) => {
+
+      if (decodedToken.id !== id) {
+    throw new myAppError(StatusCodes.UNAUTHORIZED, "You can not reset your password");
+  }
+
+  const existedUser = await userModel.findOne({ email:decodedToken.email });
   if (!existedUser) {
     throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
   }
@@ -235,7 +241,9 @@ const forgetPassword = async (email: string) => {
     if (envVarriables.NODE_ENV === "Development")
       // eslint-disable-next-line no-console
       console.log("Email sent successfully!");
-  }
+    }
+    // eslint-disable-next-line no-console
+    console.log("resetUiLink", resetUiLink);
 
   return true;
 };
