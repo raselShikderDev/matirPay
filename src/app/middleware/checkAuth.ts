@@ -40,9 +40,9 @@ const checkAuth =
         throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
       }
 
-      //   if (existedUser.isVerified === false) {
-      //     throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
-      //   }
+        if (existedUser.isVerified === false) {
+          throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+        }
 
       // if user blocked or suspened
       if (

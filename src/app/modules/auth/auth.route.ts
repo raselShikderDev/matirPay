@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authController } from "./auth.controller";
 import validateRequest from "../../middleware/validateRequest";
-import { resetPasswordZodSchema, signInZodSchema, updatePasswordZodSchema } from "./auth.zodSchema";
+import { forgetPasswordZodSchema, resetPasswordZodSchema, signInZodSchema, updatePasswordZodSchema } from "./auth.zodSchema";
 import checkAuth from "../../middleware/checkAuth";
 import { ROLE } from "../user/user.interfaces";
 
@@ -25,6 +25,14 @@ router.patch(
   "/reset-password",
   validateRequest(resetPasswordZodSchema),
   authController.resetPassowrd,
+);
+
+// send reseting password email after forgetnng password
+router.patch(
+  "/forget-password",
+  
+  validateRequest(forgetPasswordZodSchema),
+  authController.forgetPassword,
 );
 
 

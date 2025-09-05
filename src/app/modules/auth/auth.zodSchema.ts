@@ -14,6 +14,8 @@ export const signInZodSchema = z.object({
         ),
 })
 
+
+
 export const resetPasswordZodSchema = z.object({
   email: z
     .string({ message: "Invalid email address formate" })
@@ -27,6 +29,7 @@ export const resetPasswordZodSchema = z.object({
       "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
     )
 });
+
 
 export const updatePasswordZodSchema = z.object({
   newPassowrd: z
@@ -42,3 +45,12 @@ export const updatePasswordZodSchema = z.object({
       "Password must be at least 8 characters long, include one uppercase letter, one number, and one special character",
     )
 });
+
+
+export const forgetPasswordZodSchema = z.object({
+  email: z
+    .string({ message: "Invalid email address formate" })
+    .min(5, { message: "email should be at least 5 character" })
+    .max(50, { message: "email should contain maximum 50 chacacter" })
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+})
