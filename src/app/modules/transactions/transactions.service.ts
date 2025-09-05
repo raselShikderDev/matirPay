@@ -51,7 +51,7 @@ const allTransaction = async (query:Record<string, string>) => {
     transactionModel.find(),
     query as Record<string, string>,
   );
-  const tansactions = await findTransaction
+  const tansactions = findTransaction
     .search()
     .filter()
     .sort()

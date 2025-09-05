@@ -355,11 +355,13 @@ const getTotalApprovedAgentCount = async () => {
 
 // Blcok a user or agent by id 
 const blockUser = async(id:string)=>{
-  const alreadyBlocked = await userModel.findOne({_id: id, status:USER_STATUS.BLOCKED}).select("-password");
-  if (!alreadyBlocked || alreadyBlocked === null) {
-    if (envVarriables.NODE_ENV === "Development") {
-      console.log("Already blcoked");
+  const existedUser = await userModel.findById(id).select("-password");
+    if (!existedUser) {
+      throw new myAppError(StatusCodes.NOT_FOUND, "UserNot found");
     }
+  console.log("In block User - alreadyBlocked",existedUser);
+  
+  if (existedUser.status === USER_STATUS.BLOCKED) {
     throw new myAppError(StatusCodes.BAD_REQUEST, "Already blcoked! Request could not processed")
   }
 
@@ -375,13 +377,16 @@ if (!blockedUser || blockedUser === null) {
 
 // Active a user or agent by id 
 const activateUser = async(id:string)=>{
-  const alreadyActive = await userModel.findOne({_id: id, status:{$ne:USER_STATUS.ACTIVE}}).select("-password");
-  if (!alreadyActive || alreadyActive === null) {
-    if (envVarriables.NODE_ENV === "Development") {
-      console.log("Already active");
+  const existedUser = await userModel.findById(id).select("-password");
+    if (!existedUser) {
+      throw new myAppError(StatusCodes.NOT_FOUND, "UserNot found");
     }
+  console.log("In block User - alreadyBlocked",existedUser);
+  
+  if (existedUser.status === USER_STATUS.ACTIVE) {
     throw new myAppError(StatusCodes.BAD_REQUEST, "Already active! Request could not processed")
   }
+
 
   const activatedUpdatedUser = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.ACTIVE}).select("-password");
 
@@ -395,13 +400,16 @@ if (!activatedUpdatedUser || activatedUpdatedUser === null) {
 
 // Suspend a user or agent by id 
 const suspendUser = async(id:string)=>{
-  const alreadySuspended = await userModel.findOne({_id: id, status:USER_STATUS.SUSPENDED}).select("-password");
-  if (!alreadySuspended || alreadySuspended === null) {
-    if (envVarriables.NODE_ENV === "Development") {
-      console.log("Already Suspened");
+const existedUser = await userModel.findById(id).select("-password");
+    if (!existedUser) {
+      throw new myAppError(StatusCodes.NOT_FOUND, "UserNot found");
     }
+  console.log("In block User - alreadyBlocked",existedUser);
+  
+  if (existedUser.status === USER_STATUS.SUSPENDED) {
     throw new myAppError(StatusCodes.BAD_REQUEST, "Already suspened! Request could not processed")
   }
+
 
   const updatedStatusUserInfo = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.SUSPENDED}).select("-password");
 

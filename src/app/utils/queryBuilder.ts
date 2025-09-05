@@ -1,7 +1,7 @@
 import { Query } from "mongoose";
 
 
-const includeFeild = ["type", "fromWallet", "initiatedBy"];
+const includeFeild = ["type", "fromWallet", "toWallet", "initiatedBy"];
 
 export class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
