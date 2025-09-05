@@ -216,7 +216,7 @@ const forgetPassword = async (email: string) => {
     { expiresIn: "5m" },
   );
 
-  const resetUiLink = `${envVarriables.FRONEND_URL as string}/forget-password?id=${existedUser._id}?resetToken=${resetToken}`;
+  const resetUiLink = `${envVarriables.FRONEND_URL as string}/reset-password?id=${existedUser._id}&resetToken=${resetToken}`;
 
   const templateData = {
     name: existedUser.name,

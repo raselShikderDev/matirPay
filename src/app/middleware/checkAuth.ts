@@ -14,6 +14,7 @@ const checkAuth =
       if (envVarriables.NODE_ENV === "Development")
         console.log(`Start checking user authentication`);
       const accessToken = req.cookies.accessToken || req.headers.authorization;
+      console.log(accessToken);
 
       if (!accessToken) {
         throw new myAppError(
@@ -31,7 +32,6 @@ const checkAuth =
       }
 
       console.log("verifiedToken: ", verifiedToken);
-      
 
       const existedUser = await userModel
         .findById(verifiedToken.id)
@@ -40,14 +40,12 @@ const checkAuth =
         throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
       }
 
-        if (existedUser.isVerified === false) {
-          throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
-        }
+      if (existedUser.isVerified === false) {
+        throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+      }
 
       // if user blocked or suspened
-      if (
-        existedUser.status === USER_STATUS.BLOCKED
-      ) {
+      if (existedUser.status === USER_STATUS.BLOCKED) {
         throw new myAppError(
           StatusCodes.UNAUTHORIZED,
           `User is ${existedUser.status}`,

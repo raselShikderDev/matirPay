@@ -39,11 +39,8 @@ const totalActiveWallet = asyncFunc(
 // Retrving logged is user's wallet by id
 const getMyWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    const id = req.user.id;
-    if (!mongoose.isValidObjectId(id)) {
-      throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid");
-    }
-    const walletData = await walletServices.getMyWallet(id, req.user);
+
+    const walletData = await walletServices.getMyWallet(req.user);
     sendResponse(res, {
       statusCode: StatusCodes.OK,
       success: true,
@@ -54,11 +51,11 @@ const getMyWallet = asyncFunc(
 );
 
 
-
 // Get singel wallet by id - Only admin and super admins are allowed
 const singelWallet = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
+
     if (!mongoose.isValidObjectId(id)) {
       throw new myAppError(StatusCodes.BAD_REQUEST, "User id is not valid");
     }

@@ -17,8 +17,6 @@ type RequiredTransactionInput = Pick<
   "amount" | "type" | "toWallet"
 >;
 
-
-
 // Retrving all wallet
 const allWallet = async () => {
   const wallets = await walletModel.find();
@@ -27,9 +25,9 @@ const allWallet = async () => {
       // eslint-disable-next-line no-console
       console.log("Neither user nor agent created yet");
       throw new myAppError(
-      StatusCodes.BAD_REQUEST,
-      "Neither user nor agent created yet",
-    );
+        StatusCodes.BAD_REQUEST,
+        "Neither user nor agent created yet",
+      );
     }
   }
   const walletsCount = await walletModel.countDocuments();
@@ -43,37 +41,32 @@ const allWallet = async () => {
 const singelWallet = async (id: string) => {
   const wallet = await walletModel.findById(id);
   if (!wallet) {
-    throw new myAppError(
-      StatusCodes.BAD_REQUEST,
-      "No wallet found",
-    );
+    throw new myAppError(StatusCodes.BAD_REQUEST, "No wallet found");
   }
   return wallet;
 };
 
 // Retrving logged is user's wallet by id
-const getMyWallet = async (id: string, decodedToken:JwtPayload) => {
-  const wallet = await walletModel.findById(id);
-  if (!wallet) {
-    throw new myAppError(
-      StatusCodes.NOT_FOUND,
-      "No user found",
-    );
+const getMyWallet = async (decodedToken: JwtPayload) => {
+  const existedUser = await userModel.findById(decodedToken.id);
+
+  if (!existedUser) {
+    throw new myAppError(StatusCodes.NOT_FOUND, "No user found");
   }
 
-if (wallet.user !== decodedToken.id) {
-  throw new myAppError(
-      StatusCodes.NOT_FOUND,
-      "You are not not atuorized to view ",
-    );
-}
+  const wallet = await walletModel.findById(existedUser.walletId);
+  if (!wallet) {
+    throw new myAppError(StatusCodes.NOT_FOUND, "No wallet user found");
+  }
 
   return wallet;
 };
 
 //  get total Active wallet - only admins are allowed
 const totalActiveWallet = async () => {
-  const totalCurrentActiveWallet = await walletModel.countDocuments({walletStatus:WALLET_STATUS.ACTIVE});
+  const totalCurrentActiveWallet = await walletModel.countDocuments({
+    walletStatus: WALLET_STATUS.ACTIVE,
+  });
   if (!totalCurrentActiveWallet) {
     throw new myAppError(
       StatusCodes.BAD_REQUEST,
@@ -200,23 +193,6 @@ const userSendMOney = async (
       );
     }
 
-    // Updating Receiver balance
-    const updateReceiverWallet = await walletModel.findOneAndUpdate(
-      {
-        _id: toWallet,
-        walletStatus: WALLET_STATUS.ACTIVE,
-      },
-      { $inc: { balance: +amount } },
-      { runValidators: true, new: true, session },
-    );
-
-    if (!updateReceiverWallet) {
-      throw new myAppError(
-        StatusCodes.BAD_GATEWAY,
-        "Updating receiver balance is failed",
-      );
-    }
-
     // Creating transaction History
     const senderPayload: ITransaction = {
       user: decodedToken.id,
@@ -224,16 +200,55 @@ const userSendMOney = async (
       type: TransactionType.SEND_MONEY,
       initiatedBy: decodedToken.role,
       fromWallet: senderWallet._id,
-      toWallet: updateReceiverWallet._id,
+      toWallet: receiverWallet._id,
     };
 
     const tansactionHistory = await transactionModel.create([senderPayload], {
       session,
     });
-    if (!tansactionHistory) {
+    if (!tansactionHistory || !tansactionHistory[0]) {
       throw new myAppError(
         StatusCodes.BAD_GATEWAY,
         "Creatinging transaction history is failed",
+      );
+    }
+
+    // Updating Receiver history
+    const updateReceiverWallethistory = await walletModel.findOneAndUpdate(
+      {
+        _id: toWallet,
+        walletStatus: WALLET_STATUS.ACTIVE,
+      },
+      {
+        $inc: { balance: +amount },
+        $push: { transactions: tansactionHistory[0]._id },
+      },
+      { runValidators: true, new: true, session },
+    );
+
+    if (!updateReceiverWallethistory) {
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Updating receiver transactions history is failed",
+      );
+    }
+
+    // Updating Receiver transaction history
+    const updateSenderWalletHistory = await walletModel.findOneAndUpdate(
+      {
+        _id: senderWallet._id,
+        walletStatus: WALLET_STATUS.ACTIVE,
+      },
+      {
+        $push: { transactions: tansactionHistory[0]._id },
+      },
+      { runValidators: true, new: true, session },
+    );
+
+    if (!updateSenderWalletHistory) {
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Updating sender transactions history  is failed",
       );
     }
 
@@ -346,23 +361,6 @@ const userCashOut = async (
       );
     }
 
-    // Updating Receiver balance
-    const updateAgentWallet = await walletModel.findOneAndUpdate(
-      {
-        _id: toWallet,
-        walletStatus: WALLET_STATUS.ACTIVE,
-      },
-      { $inc: { balance: +amount } },
-      { runValidators: true, new: true, session },
-    );
-
-    if (!updateAgentWallet) {
-      throw new myAppError(
-        StatusCodes.BAD_GATEWAY,
-        "Updating agent balance is failed",
-      );
-    }
-
     // Creating transaction History
     const senderPayload: ITransaction = {
       user: fromWalletUser._id,
@@ -370,7 +368,7 @@ const userCashOut = async (
       type: TransactionType.CASH_OUT,
       initiatedBy: decodedToken.role,
       fromWallet: senderWallet._id,
-      toWallet: updateAgentWallet._id,
+      toWallet: receiverWallet._id,
     };
 
     const tansactionHistory = await transactionModel.create([senderPayload], {
@@ -380,6 +378,45 @@ const userCashOut = async (
       throw new myAppError(
         StatusCodes.BAD_GATEWAY,
         "Creatinging transaction history is failed",
+      );
+    }
+
+    // Updating agent transaction history
+    const updateAgentWallethistory = await walletModel.findOneAndUpdate(
+      {
+        _id: toWallet,
+        walletStatus: WALLET_STATUS.ACTIVE,
+      },
+      {
+        $inc: { balance: +amount },
+        $push: { transactions: tansactionHistory[0]._id },
+      },
+      { runValidators: true, new: true, session },
+    );
+
+    if (!updateAgentWallethistory) {
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Updating agent wallet history is failed",
+      );
+    }
+
+    // Updating Receiver transaction history
+    const updateSenderWalletHistory = await walletModel.findOneAndUpdate(
+      {
+        _id: senderWallet._id,
+        walletStatus: WALLET_STATUS.ACTIVE,
+      },
+      {
+        $push: { transactions: tansactionHistory[0]._id },
+      },
+      { runValidators: true, new: true, session },
+    );
+
+    if (!updateSenderWalletHistory) {
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Updating sender transactions history is failed",
       );
     }
 
@@ -488,13 +525,35 @@ const agentCashIn = async (
       );
     }
 
-    // Updating Receiver balance
+    // Creating transaction History
+    const senderPayload: ITransaction = {
+      user: fromWalletUser.id,
+      amount,
+      type: TransactionType.CASH_IN,
+      initiatedBy: decodedToken.role,
+      fromWallet: senderWallet._id,
+      toWallet: receiverWallet._id,
+    };
+
+    const tansactionHistory = await transactionModel.create([senderPayload], {
+      session,
+    });
+    if (!tansactionHistory) {
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Creatinging transaction history is failed",
+      );
+    }
+
+    // Updating Receiver transaction history
     const updateUserWallet = await walletModel.findOneAndUpdate(
       {
         _id: toWallet,
         walletStatus: WALLET_STATUS.ACTIVE,
       },
-      { $inc: { balance: +amount } },
+      {
+        $push: { transactions: tansactionHistory[0]._id },
+      },
       { runValidators: true, new: true, session },
     );
 
@@ -505,23 +564,22 @@ const agentCashIn = async (
       );
     }
 
-    // Creating transaction History
-    const senderPayload: ITransaction = {
-      user: fromWalletUser.id,
-      amount,
-      type: TransactionType.CASH_IN,
-      initiatedBy: decodedToken.role,
-      fromWallet: senderWallet._id,
-      toWallet: updateUserWallet._id,
-    };
+    // Updating Sender transaction history
+    const updateSenderWalletHistory = await walletModel.findOneAndUpdate(
+      {
+        _id: senderWallet._id,
+        walletStatus: WALLET_STATUS.ACTIVE,
+      },
+      {
+        $push: { transactions: tansactionHistory[0]._id },
+      },
+      { runValidators: true, new: true, session },
+    );
 
-    const tansactionHistory = await transactionModel.create([senderPayload], {
-      session,
-    });
-    if (!tansactionHistory) {
+    if (!updateSenderWalletHistory) {
       throw new myAppError(
         StatusCodes.BAD_GATEWAY,
-        "Creatinging transaction history is failed",
+        "Updating sender transactions history  is failed",
       );
     }
 
@@ -543,5 +601,5 @@ export const walletServices = {
   singelWallet,
   walletStatusToggle,
   getMyWallet,
-  totalActiveWallet
+  totalActiveWallet,
 };

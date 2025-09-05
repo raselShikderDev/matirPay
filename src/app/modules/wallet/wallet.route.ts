@@ -7,6 +7,9 @@ import { ROLE } from "../user/user.interfaces";
 
 const router = Router();
 
+
+
+
 // Send money for user
 router.post(
   "/user-send-money",
@@ -30,18 +33,23 @@ router.post(
   checkAuth(ROLE.AGENT),
   walletController.agentCashIn
 );
-// all wallet - only for admins and super admins
-router.get(
-  "/all",
-  checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN),
-  walletController.allWallet
-);
+
+
 // Retrving logged is user's wallet by id
 router.get(
   "/my-wallet",
   checkAuth(...Object.values(ROLE)),
   walletController.getMyWallet
 );
+
+
+// all wallet - only for admins and super admins
+router.get(
+  "/all",
+  checkAuth(ROLE.SUPER_ADMIN, ROLE.ADMIN),
+  walletController.allWallet
+);
+
 //get total Active wallet - only admins are allowed
 router.get(
   "/active-wallets",
