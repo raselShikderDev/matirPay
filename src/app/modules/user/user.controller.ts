@@ -8,6 +8,7 @@ import { StatusCodes } from "http-status-codes";
 import mongoose, { Types } from "mongoose";
 import myAppError from "../../errorHelper";
 import { JwtPayload } from "jsonwebtoken";
+import { envVarriables } from "../../configs/envVars.config";
 
 // Creatung user
 const createUser = asyncFunc(
@@ -85,7 +86,10 @@ const getMe = asyncFunc(
     const decodedToken = req.user as JwtPayload;
 
     const user = await userServices.singelUser(decodedToken.id);
-
+if (envVarriables.NODE_ENV === "Development") {
+      // eslint-disable-next-line no-console
+      console.log("send current user - in controller : ", user);
+}
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.CREATED,
@@ -147,7 +151,6 @@ const getSingelAgent = asyncFunc(
 const agentApproval = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    console.log("got agent aproval request in controller : ", id);
     
     if (!mongoose.isValidObjectId(id)) {
       throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
