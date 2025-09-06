@@ -1,12 +1,11 @@
 /* eslint-disable no-console */
 import { StatusCodes } from "http-status-codes";
 import myAppError from "../../errorHelper";
-import { IUser, ROLE } from "./user.interfaces";
+import { IUser, ROLE, USER_STATUS } from "./user.interfaces";
 import { userModel } from "./user.model";
 import bcrypt from "bcrypt";
 import { envVarriables } from "../../configs/envVars.config";
 import { walletModel } from "../wallet/wallet.model";
-
 
 // Creatung user with wa llet
 const createUser = async (payload: Partial<IUser>) => {
@@ -18,6 +17,7 @@ const createUser = async (payload: Partial<IUser>) => {
     if (existedUser) {
       throw new myAppError(StatusCodes.CONFLICT, "Email already exists");
     }
+    console.log();
 
     payload.password = await bcrypt.hash(
       payload.password as string,
@@ -71,7 +71,7 @@ const createUser = async (payload: Partial<IUser>) => {
 
     await session.commitTransaction();
     return userWithoutPassword;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     await session.abortTransaction();
     if (envVarriables.NODE_ENV === "Development") {
@@ -102,7 +102,6 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "You are not permitted");
   }
 
-
   const updatedUser = await userModel.findByIdAndUpdate(
     existedUser._id,
     payload,
@@ -117,7 +116,7 @@ const updateUser = async (payload: Partial<IUser>, userId: string) => {
 
 // Retriving all User - only admins are allowed
 const allUser = async (query: Record<string, string>) => {
-  const role = query.filter || "";
+  const role = query.role || "";
   const limit = Number(query.limit) || 10;
   const page = Number(query.page) || 1;
   const skip = (page - 1) * limit;
@@ -170,57 +169,124 @@ const deleteUser = async (id: string) => {
   return true;
 };
 
-
-
 // update role user to agent by id - only admins are allowed
 const agentApproval = async (id: string) => {
-  const alreadyApproved = await userModel
-    .findOne({
-      _id: id,
-      role: ROLE.AGENT,
-      isAgentApproved: true,
-    })
-    .select("-password");
+const existedUser = await userModel.findById(id).select("-password");
+// console.log("existedUser", existedUser);
 
-  let message = "";
-  if (alreadyApproved) {
-    message = "User already approved as agent";
-    return {
-      message,
-      alreadyApproved,
-    };
+if (!existedUser || existedUser === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Agent not found",
+    );
   }
 
-  const updatedToAgent = await userModel
-    .findOneAndUpdate(
-      { _id: id, role: ROLE.USER, isAgentApproved: false },
-      { role: ROLE.AGENT, isAgentApproved: true },
-      { runValidators: true, new: true },
-    )
-    .select("-password");
 
+
+  if (existedUser.role !== ROLE.AGENT) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `${existedUser.role} can't be approve as agent directly! Register as Agent first`,
+    );
+  }
+
+    console.log("existedUser after role", existedUser);
+
+
+
+  if (existedUser.isVerified === false) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is not verified`,
+    );
+  }
+
+
+  if (existedUser.status !== USER_STATUS.ACTIVE) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is is ${existedUser.status}`,
+    );
+  }
+
+  if (existedUser.isAgentApproved === true) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `User already approved as agent`,
+    );
+  }
+
+  const updatedToAgent = await userModel.findByIdAndUpdate(id,{ role: ROLE.AGENT, isAgentApproved: true }, { runValidators: true, new: true },).select("-password");
+ 
   if (!updatedToAgent || updatedToAgent === null) {
     throw new myAppError(
       StatusCodes.BAD_REQUEST,
       "Failed to update user to agent",
     );
   }
-  message = "Successfully updated user role to agent";
-  return {
-    message,
-    updatedToAgent,
-  };
+console.log("updatedToAgent", updatedToAgent);
+
+  return updatedToAgent
+};
+
+// Suspend  agent by id - only admins are allowed
+const agentSuspend = async (id: string) => {
+  const existedUser = await userModel.findById(id).select("-password");
+
+if (!existedUser || existedUser === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Agent not found",
+    );
+  }
+
+  if (existedUser.role !== ROLE.AGENT) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `${existedUser.role} can't be suspend as agent directly! Register as Agent first`,
+    );
+  }
+
+  if (existedUser.isVerified === false) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is not verified`,
+    );
+  }
+
+  if (existedUser.status !== USER_STATUS.ACTIVE) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `Agent is  ${existedUser.status}`,
+    );
+  }
+
+  if (existedUser.isAgentApproved === false) {
+     throw new myAppError(
+      StatusCodes.FORBIDDEN,
+      `User already suspended as agent`,
+    );
+  }
+  const updatedToSuspended = await userModel.findByIdAndUpdate(id,{isAgentApproved: false }, { runValidators: true, new: true },).select("-password");
+ 
+  if (!updatedToSuspended || updatedToSuspended === null) {
+    throw new myAppError(
+      StatusCodes.BAD_REQUEST,
+      "Failed to suspend agent",
+    );
+  }
+  return updatedToSuspended
 };
 
 // update agent status in a toggle system by id - only admins are allowed
-const agentStatusToggle = async (id: string) => {
-  const updatedToAgent = await userModel
+const agentAndUserStatusToggle = async (id: string) => {
+  const updatedToAgentAndUser = await userModel
     .findOneAndUpdate(
-      { _id: id, role: ROLE.AGENT },
+      { _id: id },
       [
         {
           $set: {
-            isAgentApproved: { $not: "$isAgentApproved" },
+            role: { $not: "$role" },
           },
         },
       ],
@@ -228,20 +294,18 @@ const agentStatusToggle = async (id: string) => {
     )
     .select("-password");
 
-  if (!updatedToAgent || updatedToAgent === null) {
+  if (!updatedToAgentAndUser || updatedToAgentAndUser === null) {
     if (envVarriables.NODE_ENV === "Development") {
-      console.log("User not created yet");
+      console.log("User or Agent not found");
     }
     throw new myAppError(
       StatusCodes.BAD_REQUEST,
-      "Failed to update agent status",
+      "Failed to update agent or User status",
     );
   }
 
-  return updatedToAgent;
+  return updatedToAgentAndUser;
 };
-
-
 
 // get all agents
 const allAgents = async () => {
@@ -255,11 +319,7 @@ const allAgents = async () => {
       console.log("user not created yet");
     }
   }
-
-  const agentsCount = await userModel.countDocuments({
-    role: ROLE.AGENT,
-    isAgentApproved: true,
-  });
+  const agentsCount = await userModel.countDocuments();
 
   return {
     meta: agentsCount,
@@ -284,6 +344,85 @@ const getSingelAgent = async (id: string) => {
   return agent;
 };
 
+// get count to total approved agent
+const getTotalApprovedAgentCount = async () => {
+  const agentsCount = await userModel.countDocuments({
+    role: ROLE.AGENT,
+    isAgentApproved: true,
+  });
+  return agentsCount;
+};
+
+// Blcok a user or agent by id 
+const blockUser = async(id:string)=>{
+  const existedUser = await userModel.findById(id).select("-password");
+    if (!existedUser) {
+      throw new myAppError(StatusCodes.NOT_FOUND, "UserNot found");
+    }
+  console.log("In block User - alreadyBlocked",existedUser);
+  
+  if (existedUser.status === USER_STATUS.BLOCKED) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "Already blcoked! Request could not processed")
+  }
+
+  const blockedUser = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.BLOCKED}).select("-password");
+
+if (!blockedUser || blockedUser === null) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Blocking faild! Request could not processed")
+  }
+
+  return blockedUser
+  
+}
+
+// Active a user or agent by id 
+const activateUser = async(id:string)=>{
+  const existedUser = await userModel.findById(id).select("-password");
+    if (!existedUser) {
+      throw new myAppError(StatusCodes.NOT_FOUND, "UserNot found");
+    }
+  console.log("In block User - alreadyBlocked",existedUser);
+  
+  if (existedUser.status === USER_STATUS.ACTIVE) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "Already active! Request could not processed")
+  }
+
+
+  const activatedUpdatedUser = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.ACTIVE}).select("-password");
+
+if (!activatedUpdatedUser || activatedUpdatedUser === null) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Activiting faild! Request could not processed")
+  }
+
+  return activatedUpdatedUser
+}
+
+
+// Suspend a user or agent by id 
+const suspendUser = async(id:string)=>{
+const existedUser = await userModel.findById(id).select("-password");
+    if (!existedUser) {
+      throw new myAppError(StatusCodes.NOT_FOUND, "UserNot found");
+    }
+  console.log("In block User - alreadyBlocked",existedUser);
+  
+  if (existedUser.status === USER_STATUS.SUSPENDED) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "Already suspened! Request could not processed")
+  }
+
+
+  const updatedStatusUserInfo = await userModel.findByIdAndUpdate(id, {status:USER_STATUS.SUSPENDED}).select("-password");
+
+if (!updatedStatusUserInfo || updatedStatusUserInfo === null) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Suspending faild! Request could not processed")
+  }
+
+  return updatedStatusUserInfo
+  
+}
+
+
+
 export const userServices = {
   createUser,
   updateUser,
@@ -292,6 +431,11 @@ export const userServices = {
   allAgents,
   getSingelAgent,
   agentApproval,
-  agentStatusToggle,
+  agentAndUserStatusToggle,
   deleteUser,
+  getTotalApprovedAgentCount,
+  agentSuspend,
+  blockUser,
+  suspendUser,
+  activateUser
 };

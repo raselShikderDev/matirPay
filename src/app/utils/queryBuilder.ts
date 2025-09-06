@@ -1,7 +1,7 @@
 import { Query } from "mongoose";
 
 
-const includeFeild = ["type", "fromWallet", "initiatedBy"];
+const includeFeild = ["type", "fromWallet", "toWallet", "initiatedBy"];
 
 export class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
@@ -77,8 +77,8 @@ export class QueryBuilder<T> {
     const page = Number(this.query.page) || 1;
     const limit = Number(this.query.limit) || 10;
 
-    const totalPage = Math.ceil(totalDocuments / limit);
+    const totalpage = Math.ceil(totalDocuments / limit);
 
-    return { page, limit, total: totalDocuments, totalPage };
+    return { page, limit, total: totalDocuments, totalpage };
   }
 }

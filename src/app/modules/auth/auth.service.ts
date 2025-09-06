@@ -6,7 +6,7 @@ import { USER_STATUS } from "../user/user.interfaces";
 import Jwt, { JwtPayload } from "jsonwebtoken";
 import { envVarriables } from "../../configs/envVars.config";
 import generateTokens from "../../utils/generateTokens";
-
+import { sendEmailOptions, sendMail } from "../../utils/sendMail";
 
 // Login by Credentials
 const credentialsLogin = async (email: string, plainPassword: string) => {
@@ -16,10 +16,7 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
   }
 
   // if user blocked or suspened
-  if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
-  ) {
+  if (existedUser.status === USER_STATUS.BLOCKED) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
       `User is ${existedUser.status}`,
@@ -49,6 +46,7 @@ const credentialsLogin = async (email: string, plainPassword: string) => {
   return userWithoutPassword;
 };
 
+
 const generateNewTokens = async (refreshToen: string) => {
   const verifyRefreshToken = (await Jwt.verify(
     refreshToen,
@@ -67,15 +65,12 @@ const generateNewTokens = async (refreshToen: string) => {
     throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
-  //   if (existedUser.isVerified === false) {
-  //     throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
-  //   }
+  if (existedUser.isVerified === false) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+  }
 
   // if user blocked or suspened
-  if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
-  ) {
+  if (existedUser.status === USER_STATUS.BLOCKED) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
       `User is ${existedUser.status}`,
@@ -97,18 +92,16 @@ const updatePassowrd = async (
   newPassword: string,
   email: string,
 ) => {
-
   const existedUser = await userModel.findOne({ email });
   if (!existedUser) {
     throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
+  if (existedUser.isVerified === false) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+  }
 
-
-  if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
-  ) {
+  if (existedUser.status === USER_STATUS.BLOCKED) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
       `User is ${existedUser.status}`,
@@ -119,7 +112,6 @@ const updatePassowrd = async (
     throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
   }
 
-
   const isValidPassword = await bcrypt.compare(
     oldPassword,
     existedUser.password,
@@ -128,42 +120,48 @@ const updatePassowrd = async (
     throw new myAppError(StatusCodes.NOT_FOUND, "Invalid Password");
   }
 
-
   const hasedpassword = await bcrypt.hash(
     newPassword as string,
     Number(envVarriables.BCRYPT_SALT_ROUND as string),
   );
-  const updatedpassword = await userModel.findByIdAndUpdate(
+  const updatedNewPassword = await userModel.findByIdAndUpdate(
     existedUser._id,
     { password: hasedpassword },
     { runValidators: true, new: true },
   );
 
-  if (!updatedpassword) {
+  if (!updatedNewPassword) {
     throw new myAppError(
       StatusCodes.BAD_GATEWAY,
       "updating password is failed",
     );
   }
-  return true;
+  return updatedNewPassword;
 };
 
 // Chnaging password after forgeting
-const resetPassowrd = async (email: string, plainPassword: string) => {
-  const existedUser = await userModel.findOne({ email });
+const resetPassowrd = async (decodedToken: JwtPayload, id:string, plainPassword: string) => {
+
+      if (decodedToken.id !== id) {
+    throw new myAppError(StatusCodes.UNAUTHORIZED, "You can not reset your password");
+  }
+
+  const existedUser = await userModel.findOne({ email:decodedToken.email });
   if (!existedUser) {
     throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
   }
 
-  if (
-    existedUser.status === USER_STATUS.BLOCKED ||
-    existedUser.status === USER_STATUS.SUSPENDED
-  ) {
+  if (existedUser.status === USER_STATUS.BLOCKED) {
     throw new myAppError(
       StatusCodes.UNAUTHORIZED,
       `User is ${existedUser.status}`,
     );
   }
+
+  if (existedUser.isVerified === false) {
+    throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
+  }
+
   // if user already deleted
   if (existedUser.isDeleted === true) {
     throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
@@ -188,11 +186,72 @@ const resetPassowrd = async (email: string, plainPassword: string) => {
   return true;
 };
 
+// send reseting password email after forgetnng password
+const forgetPassword = async (email: string) => {
+  const existedUser = await userModel.findOne({ email });
+  if (!existedUser) {
+    throw new myAppError(StatusCodes.NOT_FOUND, "User not found");
+  }
 
+  if (existedUser.status === USER_STATUS.BLOCKED) {
+    throw new myAppError(
+      StatusCodes.UNAUTHORIZED,
+      `User is ${existedUser.status}`,
+    );
+  }
+
+  if (existedUser.isDeleted === true) {
+    throw new myAppError(StatusCodes.UNAUTHORIZED, `User is already deleted`);
+  }
+
+  const JwtPayload = {
+    id: existedUser._id,
+    email: existedUser.email,
+    role: existedUser.role,
+  };
+
+  const resetToken = Jwt.sign(
+    JwtPayload,
+    envVarriables.JWT_ACCESS_SECRET as string,
+    { expiresIn: "5m" },
+  );
+
+  const resetUiLink = `${envVarriables.FRONEND_URL as string}/reset-password?id=${existedUser._id}&resetToken=${resetToken}`;
+
+  const templateData = {
+    name: existedUser.name,
+    resetUiLink,
+  };
+
+  const payload: sendEmailOptions = {
+    to: existedUser.email,
+    subject: "Reset your password",
+    templateName: "forgetPassword",
+    templateData,
+  };
+
+  // Sending email
+  const info = await sendMail(payload);
+  const isSent = info.accepted && info.accepted.length > 0;
+  if (!isSent) {
+    if (envVarriables.NODE_ENV === "Development")
+      // eslint-disable-next-line no-console
+      console.log("Email was not sent. Rejected:", info.rejected);
+  } else {
+    if (envVarriables.NODE_ENV === "Development")
+      // eslint-disable-next-line no-console
+      console.log("Email sent successfully!");
+    }
+    // eslint-disable-next-line no-console
+    console.log("resetUiLink", resetUiLink);
+
+  return true;
+};
 
 export const authServices = {
   credentialsLogin,
   generateNewTokens,
   updatePassowrd,
-  resetPassowrd
+  resetPassowrd,
+  forgetPassword,
 };

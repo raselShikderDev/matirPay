@@ -83,7 +83,11 @@ const updatePassowrd = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const decodedToken = req.user as JwtPayload
     const {oldPassword, newPassowrd} = req.body   
-    authServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+   const data = await authServices.updatePassowrd(oldPassword, newPassowrd, decodedToken.email)
+
+    if (!data) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
+  }
 
     sendResponse(res, {
       success: true,
@@ -95,12 +99,33 @@ const updatePassowrd = asyncFunc(
 );
 
 
+// send reseting password email after forgetnng password
+const forgetPassword = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const {email} = req.body
+   
+    const passwordChnaged = await authServices.forgetPassword(email)
+if (!passwordChnaged) {
+    throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to send reset password url");
+  }
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.CREATED,
+      message: "Successfully sent reset password url",
+      data: null,
+    });
+  }
+);
+
+
 // Chnaging password after forgeting
 const resetPassowrd = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    const {email, newPlainPassword} = req.body
+    const {id, newPassword} = req.body
+    const decodedToken = req.user
+    
    
-    const passwordChnaged = await authServices.resetPassowrd(email, newPlainPassword)
+    const passwordChnaged = await authServices.resetPassowrd(decodedToken, id, newPassword)
 if (!passwordChnaged) {
     throw new myAppError(StatusCodes.BAD_GATEWAY, "Failed to chanage password");
   }
@@ -120,4 +145,5 @@ export const authController = {
   generateNewTokens,
   updatePassowrd,
   resetPassowrd,
+  forgetPassword,
 };
