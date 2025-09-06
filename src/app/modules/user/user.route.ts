@@ -46,6 +46,8 @@ router.get("/all-agents", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userControlle
 
 // get count to total approved agent - (Only admins and super admins are allowed)
 router.get("/all-approved-agents-count", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.getTotalApprovedAgentCount)
+// get count to total approved agent - (Only admins and super admins are allowed)
+router.patch("/done-tour-guide", checkAuth(...Object.values(ROLE)), userController.tourGuideDone)
 
 // Get singel Agent by id - (Only admins and super admins are allowed)
 router.get("/agents/:id", checkAuth(ROLE.ADMIN, ROLE.SUPER_ADMIN), userController.getSingelAgent)

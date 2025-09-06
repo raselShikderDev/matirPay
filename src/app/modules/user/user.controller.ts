@@ -233,6 +233,24 @@ const blockUser = asyncFunc(
 );
 
 // Suspend a user or agent by id  by id - only admins are allowed
+const tourGuideDone = asyncFunc(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.user.id;
+    const data = await userServices.suspendUser(id);
+    if (!data) {
+        throw new myAppError(StatusCodes.BAD_GATEWAY, "Somthing wrong! Chnage status of tour guide done is failed")
+      }
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: `Tour guide successfully completed`,
+      data: null,
+    });
+  },
+);
+
+// Suspend a user or agent by id  by id - only admins are allowed
 const suspendUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
@@ -305,4 +323,5 @@ export const userController = {
   blockUser,
   suspendUser,
   activateUser,
+  tourGuideDone,
 };

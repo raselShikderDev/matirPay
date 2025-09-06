@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema<IUser>(
       ref: "wallet",
     },
     isAgentApproved: { type: Boolean, default: false },
+    isTourGuideShown: { type: Boolean, default: false },
   },
   {
     timestamps: true,
