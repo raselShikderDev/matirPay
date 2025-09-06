@@ -1,4 +1,4 @@
-# 💳 MatirPay – Digital Wallet Web App (Bangladesh)
+# 💳 MatirPay – Digital Wallet Web App
 
 MatirPay is a **digital wallet and payment solution** tailored for the Bangladeshi market. It allows users to **securely transfer money, pay bills, manage transactions**, and supports **merchant payments**. The backend is built with **TypeScript and Express**, following **modular architecture** and best practices for scalability and maintainability.
 
@@ -9,8 +9,7 @@ MatirPay is a **digital wallet and payment solution** tailored for the Banglades
 MatirPay provides a secure and fast digital wallet experience with the following features:
 
 * 🔐 **Authentication** using JWT and session cookies
-* 💸 **Send and receive money** between users
-* 🏦 **Merchant support** for payments and account management
+* 💸 **Send and receive and withdraw money** between users
 * 📊 **Transaction history** with advanced filters
 * ⚡ **High performance** with TypeScript + Bun
 * ✅ **Input validation** using Zod for robust API requests
@@ -69,21 +68,14 @@ Check out the live deployed app on Vercel: [MatirPay](https://matirpay.vercel.ap
 * Redis for caching and session management
 * Nodemailer for email notifications
 
-**Frontend (planned):**
-* React
-* Next.js
-* Redux Toolkit Query
-* Tailwind CSS
-* Shadcn UI components
-
 **Tools & Dev Practices:**
-* Bun or npm
+* Bun 
 * ESLint & Prettier for code quality
 * GitHub Actions for CI/CD
 
 ---
 
-## 📂 Robust Folder Structure
+## 📂 Folder Structure
 
 ```pgsql
 matirPay/
@@ -108,17 +100,11 @@ matirPay/
 │   │   │   ├── user.routes.ts
 │   │   │   └── user.service.ts
 │   │   │
-│   │   ├── transaction/        # Transactions module
-│   │   │   ├── transaction.model.ts
-│   │   │   ├── transaction.controller.ts
-│   │   │   ├── transaction.routes.ts
-│   │   │   └── transaction.service.ts
-│   │   │
-│   │   └── merchant/           # Merchant module
-│   │       ├── merchant.model.ts
-│   │       ├── merchant.controller.ts
-│   │       ├── merchant.routes.ts
-│   │       └── merchant.service.ts
+│   │   └── transaction/        # Transactions module
+│   │       ├── transaction.model.ts
+│   │       ├── transaction.controller.ts
+│   │       ├── transaction.routes.ts
+│   │       └── transaction.service.ts
 │   │
 │   ├── middlewares/            # Custom middlewares
 │   │   ├── auth.middleware.ts
@@ -223,10 +209,10 @@ Currently no unit tests are implemented. You can add Jest / Supertest to test AP
 ---
 ## 📌 Notes
 
-* ✅ Uses **TypeScript strict mode** for safer development.
-* ✅ Enforces **clean code** with ESLint & Prettier.
+* ✅ Used **TypeScript strict mode** for safer development.
+* ✅ Enforced **clean code** with ESLint & Prettier.
 * ✅ Secure authentication with **JWT + session cookies**.
-* ✅ Validates all incoming requests with **Zod**.
+* ✅ Validated all incoming requests with **Zod**.
 * 🚀 Ready to integrate with a **React/Next.js frontend** for full-stack usage.
 
 ---
