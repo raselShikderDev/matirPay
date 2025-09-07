@@ -73,47 +73,51 @@ Check out the live deployed app on Vercel: [MatirPay](https://matirpay.vercel.ap
 * ESLint & Prettier for code quality
 * GitHub Actions for CI/CD
 
----
+
+├── src/                        # Source code of the application
+│   ├── app/                    # Core application logic
+│   │   ├── configs/            # Configuration files
+│   │   │   ├── envVars.config.ts   # Environment variable setup
+│   │   │   └── redis.config.ts     # Redis client setup
+│   │   │
 
 ## 📂 Folder Structure
 
-```pgsql
 matirPay/
-├── node_modules/                   # Automatically generated directory for dependencies.
-├── src/                            # Source code of the application
-│   ├── app/                        # Core application logic
-│   │   ├── configs/                # Configuration files
-│   │   │   ├── envVars.config.ts           # Environment variable setup
-│   │   │   └── redis.config.ts             # Redis client setup
+├── src/                        # Source code of the application
+│   ├── app/                    # Core application logic
+│   │   ├── configs/            # Configuration files
+│   │   │   ├── envVars.config.ts   # Environment variable setup
+│   │   │   └── redis.config.ts     # Redis client setup
 │   │   │
-│   │   ├── middleware/            # Custom middlewares
-│   │   │   ├── checkAuth.ts                # Authorization/authentication check
-│   │   │   ├── globalError.ts              # Global error handler
-│   │   │   ├── notFound.ts                 # 404 not found handler
-│   │   │   └── validateRequest.ts          # Request validation middleware
+│   │   ├── middleware/         # Custom middlewares
+│   │   │   ├── checkAuth.ts        # Authorization/authentication check
+│   │   │   ├── globalError.ts      # Global error handler
+│   │   │   ├── notFound.ts         # 404 not found handler
+│   │   │   └── validateRequest.ts  # Request validation middleware
 │   │   │
-│   │   ├── modules/                # Feature-based modular structure
-│   │   │   ├── auth/               # Authentication module
-│   │   │   │   ├── auth.controller.ts      # Handles auth routes logic
-│   │   │   │   ├── auth.interface.ts       # TypeScript interfaces for auth
-│   │   │   │   ├── auth.route.ts           # Auth routes
-│   │   │   │   ├── auth.service.ts         # Auth business logic
-│   │   │   │   └── auth.zodSchema.ts       # Request validation schemas
+│   │   ├── modules/            # Feature-based modular structure
+│   │   │   ├── auth/           # Authentication module
+│   │   │   │   ├── auth.controller.ts  # Handles auth routes logic
+│   │   │   │   ├── auth.interface.ts   # TypeScript interfaces for auth
+│   │   │   │   ├── auth.route.ts       # Auth routes
+│   │   │   │   ├── auth.service.ts     # Auth business logic
+│   │   │   │   └── auth.zodSchema.ts  # Request validation schemas
 │   │   │   │
-│   │   │   ├── otp/                # One-Time Password module
+│   │   │   ├── otp/            # One-Time Password module
 │   │   │   │   ├── otp.controller.ts
 │   │   │   │   ├── otp.route.ts
 │   │   │   │   ├── otp.service.ts
 │   │   │   │   └── otp.zodSchema.ts
 │   │   │   │
-│   │   │   ├── transactions/       # Transactions module
+│   │   │   ├── transactions/   # Transactions module
 │   │   │   │   ├── transactions.controller.ts
 │   │   │   │   ├── transactions.interface.ts
 │   │   │   │   ├── transactions.model.ts
 │   │   │   │   ├── transactions.route.ts
 │   │   │   │   └── transactions.service.ts
 │   │   │   │
-│   │   │   ├── user/               # User module
+│   │   │   ├── user/           # User module
 │   │   │   │   ├── user.controller.ts
 │   │   │   │   ├── user.interfaces.ts
 │   │   │   │   ├── user.model.ts
@@ -121,7 +125,7 @@ matirPay/
 │   │   │   │   ├── user.service.ts
 │   │   │   │   └── user.zodSchema.ts
 │   │   │   │
-│   │   │   └── wallet/             # Wallet module
+│   │   │   └── wallet/         # Wallet module
 │   │   │       ├── wallet.controller.ts
 │   │   │       ├── wallet.interface.ts
 │   │   │       ├── wallet.model.ts
@@ -129,39 +133,40 @@ matirPay/
 │   │   │       ├── wallet.service.ts
 │   │   │       └── wallet.zodSchema.ts
 │   │   │
-│   │   ├── routes/                 # App routes aggregator
+│   │   ├── routes/             # App routes aggregator
 │   │   │   └── index.ts
 │   │   │
-│   │   └── utils/                  # Helper functions and utilities
-│   │       ├── asyncFunc.ts            # Wraps async functions with error handling
-│   │       ├── generateOtp.ts          # OTP generation logic
-│   │       ├── generateTokens.ts       # JWT token generation
-│   │       ├── queryBuilder.ts         # Query helper for database operations
-│   │       ├── seedSuperAdmin.ts       # Seeds super admin user
-│   │       ├── sendMail.ts             # Email sending utility
-│   │       ├── sendResponse.ts         # Standard response handler
-│   │       ├── setCookies.ts           # Sets auth cookies
-│   │       ├── transactionQuery.ts     # Transaction query helpers
-│   │       └── templates/              # Email templates
+│   │   └── utils/              # Helper functions and utilities
+│   │       ├── asyncFunc.ts        # Wraps async functions with error handling
+│   │       ├── generateOtp.ts      # OTP generation logic
+│   │       ├── generateTokens.ts   # JWT token generation
+│   │       ├── queryBuilder.ts     # Query helper for database operations
+│   │       ├── seedSuperAdmin.ts   # Seeds super admin user
+│   │       ├── sendMail.ts         # Email sending utility
+│   │       ├── sendResponse.ts     # Standard response handler
+│   │       ├── setCookies.ts       # Sets auth cookies
+│   │       ├── transactionQuery.ts # Transaction query helpers
+│   │       └── templates/          # Email templates
 │   │           ├── forgetPassword.ejs
 │   │           └── sendOtp.ejs
 │   │
-│   └── public/                     # Static assets (index.html, icons, images, etc.)
-│       └── index.html                  # html file for rendering in landing page
+│   └── public/                 # Static assets (index.html, icons, images, etc.)
+│       └── index.html
 │
-├── .env                                # Environment variables
-├── .env.example                        # Example environment variables
-├── .gitignore                          # Files/folders ignored by Git
-├── .prettierrc                         # Prettier formatting configuration
-├── bun.lock                            # Bun package manager lock file
-├── eslint.config.mjs                   # ESLint configuration
-├── package.json                        # Project metadata, scripts, and dependencies
-├── tsconfig.json                       # TypeScript compiler configuration
-├── vercel.json                         # Vercel deployment configuration
-└── README.md                           # Project documentation
-```
+├── .env                         # Environment variables
+├── .env.example                 # Example environment variables
+├── .gitignore                   # Files/folders ignored by Git
+├── .prettierrc                  # Prettier formatting configuration
+├── bun.lock                     # Bun package manager lock file
+├── eslint.config.mjs            # ESLint configuration
+├── package.json                 # Project metadata, scripts, and dependencies
+├── tsconfig.json                # TypeScript compiler configuration
+├── vercel.json                  # Vercel deployment configuration
+└── README.md                    # Project documentation
 
-                
+
+
+
 ## 📌 API Actions (Endpoints Overview)
 
 ### 🔐 Authentication
