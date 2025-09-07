@@ -440,7 +440,7 @@ const suspendUser = async (id: string) => {
   return updatedStatusUserInfo;
 };
 
-// Suspend a user or agent by id
+// Mark tour guide completed by id
 const tourGuideDone = async (id: string) => {
   const existedUser = await userModel.findById(id).select("+password");
   if (!existedUser) {
@@ -463,7 +463,7 @@ const tourGuideDone = async (id: string) => {
     throw new myAppError(StatusCodes.BAD_REQUEST, "User is not verified");
   }
 
-  const updatedStatusUserInfo = await userModel
+  const istourGuideCompleted = await userModel
     .findByIdAndUpdate(
       id,
       { isTourGuideShown: true },
@@ -471,14 +471,21 @@ const tourGuideDone = async (id: string) => {
     )
     .select("-password");
 
-  if (!updatedStatusUserInfo || updatedStatusUserInfo === null) {
+  if (!istourGuideCompleted || istourGuideCompleted === null) {
     throw new myAppError(
       StatusCodes.BAD_GATEWAY,
-      "Chnage status of tour guide done is failed",
+      "Changing tour guide completion status is failed",
     );
   }
 
-  return updatedStatusUserInfo;
+    if (!istourGuideCompleted.isTourGuideShown) {
+      throw new myAppError(
+      StatusCodes.BAD_GATEWAY,
+      "Tour guide completaion setting is failed",
+    );
+    }
+
+  return istourGuideCompleted;
 };
 
 export const userServices = {

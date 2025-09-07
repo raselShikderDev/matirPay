@@ -44,7 +44,7 @@ const updateUser = asyncFunc(
 // Retriving all User - only admins are allowed
 const allUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    const query = req.query;    
+    const query = req.query;
     const { data, meta } = await userServices.allUser(
       query as Record<string, string>,
     );
@@ -86,10 +86,10 @@ const getMe = asyncFunc(
     const decodedToken = req.user as JwtPayload;
 
     const user = await userServices.singelUser(decodedToken.id);
-if (envVarriables.NODE_ENV === "Development") {
+    if (envVarriables.NODE_ENV === "Development") {
       // eslint-disable-next-line no-console
       console.log("send current user - in controller : ", user);
-}
+    }
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.CREATED,
@@ -151,17 +151,14 @@ const getSingelAgent = asyncFunc(
 const agentApproval = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
-    
+
     if (!mongoose.isValidObjectId(id)) {
       throw new myAppError(StatusCodes.BAD_REQUEST, "ID is not valid");
     }
     const data = await userServices.agentApproval(id);
 
     if (!data || data === null) {
-      throw new myAppError(
-        StatusCodes.BAD_REQUEST,
-        "Failed to aprrove agent",
-      );
+      throw new myAppError(StatusCodes.BAD_REQUEST, "Failed to aprrove agent");
     }
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -182,10 +179,7 @@ const agentSuspend = asyncFunc(
     const data = await userServices.agentSuspend(id);
 
     if (!data || data === null) {
-      throw new myAppError(
-        StatusCodes.BAD_REQUEST,
-        "Failed to suspend agent",
-      );
+      throw new myAppError(StatusCodes.BAD_REQUEST, "Failed to suspend agent");
     }
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -236,10 +230,19 @@ const blockUser = asyncFunc(
 const tourGuideDone = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
     const id = req.user.id;
-    const data = await userServices.suspendUser(id);
+    const data = await userServices.tourGuideDone(id);
     if (!data) {
-        throw new myAppError(StatusCodes.BAD_GATEWAY, "Somthing wrong! Chnage status of tour guide done is failed")
-      }
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Somthing wrong! Changing status of tour guide completed is failed",
+      );
+    }
+    if (!data.isTourGuideShown) {
+      throw new myAppError(
+        StatusCodes.BAD_GATEWAY,
+        "Somthing wrong! Request could not processed of completion of tour guide",
+      );
+    }
 
     sendResponse(res, {
       statusCode: StatusCodes.OK,
@@ -268,7 +271,6 @@ const suspendUser = asyncFunc(
   },
 );
 
-
 // Active a user or agent by id  by id - only admins are allowed
 const activateUser = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -287,15 +289,15 @@ const activateUser = asyncFunc(
   },
 );
 
-
-
 // get count to total approved agent
 const getTotalApprovedAgentCount = asyncFunc(
   async (req: Request, res: Response, next: NextFunction) => {
-    
     const data = await userServices.getTotalApprovedAgentCount();
-    if(!data){
-      throw new myAppError(StatusCodes.NOT_FOUND,"failed to retrived total count of approved agent")
+    if (!data) {
+      throw new myAppError(
+        StatusCodes.NOT_FOUND,
+        "failed to retrived total count of approved agent",
+      );
     }
 
     sendResponse(res, {
