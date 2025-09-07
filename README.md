@@ -53,7 +53,7 @@ MatirPay provides a secure and fast digital wallet experience with the following
 
 ## 🌍 Live Demo
 
-Check out the live deployed app on Vercel: [MatirPay](https://matirpay.vercel.app/)
+Check out the live deployed app on Vercel: [MatirPay](https://matir-pay.vercel.app/)
 
 ---
 
